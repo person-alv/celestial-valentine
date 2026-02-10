@@ -1,4 +1,4 @@
-# 💖 Faith & Alvin: Celestial Valentine
+# 💖 Celestial Valentine
 
 A magical, interactive Valentine's Day experience built with React.
 
