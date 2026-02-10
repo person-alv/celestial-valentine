@@ -32,8 +32,8 @@ export const BREAKPOINTS = {
 };
 
 // Valentine's Day target date
-// export const VALENTINE_DATE = new Date('2026-02-14T00:00:00');
-export const VALENTINE_DATE = new Date('2026-02-10T02:50:00');
+export const VALENTINE_DATE = new Date('2026-02-14T00:00:00');
+// export const VALENTINE_DATE = new Date('2026-02-10T02:50:00');
 
 // Check if device is mobile
 export const isMobile = () => {
