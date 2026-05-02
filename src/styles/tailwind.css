@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-quicksand bg-sg-black text-white selection:bg-sg-purple selection:text-white;
+  }
+}
+
+@layer components {
+  .btn-system {
+    @apply font-orbitron uppercase tracking-widest px-8 py-3 bg-sg-midnight border-2 border-sg-purple hover:bg-sg-purple hover:border-sg-gold transition-all duration-300 rounded-sm;
+  }
+  
+  .glass-card {
+    @apply bg-black/40 backdrop-blur-md border border-white/20 rounded-lg;
+  }
+}

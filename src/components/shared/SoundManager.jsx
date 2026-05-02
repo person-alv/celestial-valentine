@@ -1,23 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { useSound } from '../../hooks/useSound';
+import { toggleMusicMute, toggleSFXMute } from '../../store/slices/shadowGardenSlice';
 
 /**
  * Sound Manager UI Component
  * Provides floating mute toggle buttons for Music and SFX independently
  */
 const SoundManager = () => {
-  const { toggleSFX, toggleMusic, isSFXMuted, isMusicMuted } = useSound();
-  
-  const [sfxMuted, setSfxMuted] = useState(isSFXMuted());
-  const [musicMuted, setMusicMuted] = useState(isMusicMuted());
+  const dispatch = useDispatch();
+  const { musicMuted, sfxMuted } = useSelector(state => state.shadowGarden);
 
   const handleToggleSFX = () => {
-    setSfxMuted(toggleSFX());
+    dispatch(toggleSFXMute());
   };
 
   const handleToggleMusic = () => {
-    setMusicMuted(toggleMusic());
+    dispatch(toggleMusicMute());
   };
 
   return (
