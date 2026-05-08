@@ -1,18 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { getBossByLevel } from '../../../data/shadow-garden/bosses';
 
 const BossBar = () => {
   const { currentBossHealth, maxBossHealth, currentLevel } = useSelector(state => state.shadowGarden);
+  const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    setImgFailed(false);
+  }, [currentLevel]);
 
   const healthPercent = (currentBossHealth / maxBossHealth) * 100;
   const boss = getBossByLevel(currentLevel);
 
   return (
     <Container className="w-full max-w-2xl px-4 py-2 bg-black/60 border-b-2 border-sg-purple/50 backdrop-blur-md flex items-center gap-4">
-      <BossIcon className="w-16 h-16 rounded-full bg-sg-midnight border-2 border-sg-purple flex items-center justify-center text-2xl shadow-[0_0_15px_rgba(123,44,191,0.5)]">
-        {boss.emoji}
+      <BossIcon className="w-20 h-20 rounded-full bg-sg-midnight border-2 border-sg-purple flex items-center justify-center text-3xl shadow-[0_0_15px_rgba(123,44,191,0.5)]">
+        {!imgFailed
+          ? <img
+              src={`/images/bosses/boss_${currentLevel}.png`}
+              alt={boss.name}
+              onError={() => setImgFailed(true)}
+              draggable={false}
+              style={{ width: '96%', height: '96%', objectFit: 'cover', borderRadius: '50%', userSelect: 'none' }}
+            />
+          : boss.emoji
+        }
       </BossIcon>
 
       <div className="flex-1">

@@ -172,6 +172,9 @@ const NebulaGlow2 = styled.div`
   z-index: 1;
 `;
 
-const ContentWrapper = styled.div``;
+const ContentWrapper = styled.div`
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+`;
 
 export default Level5;

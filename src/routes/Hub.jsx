@@ -6,14 +6,14 @@ import gsap from 'gsap';
 import { soundManager } from '../hooks/useSound';
 import { setActivePoster } from '../store/slices/hubSlice';
 
-/**
- * Enhanced Immersive Hub
- * Features:
- * - Unified Camera State (Room, Laptop, Posters)
- * - Smart Click Manager (Separates Single/Double Clicks)
- * - Random Constellations with occasional Shapes
- * - Nested Solo Leveling "System" UI
- */
+// Drop poster images into public/images/posters/ — see README there for sizing.
+// Set src: null to keep emoji fallback for that poster.
+const POSTERS = [
+  { id: 'gojo',  emoji: '👁️', color: '#00BFFF', src: '/images/posters/poster_gojo.jpg'  },
+  { id: 'given', emoji: '🎸', color: '#FFB6C1', src: '/images/posters/poster_given.jpg' },
+  { id: 'solo',  emoji: '🗡️', color: '#FFD700', src: '/images/posters/poster_solo.jpg'  },
+];
+
 const Hub = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -27,6 +27,7 @@ const Hub = () => {
   const clickTimer = useRef(null);
   const posterRefs = useRef({});
   const laptopRef = useRef(null);
+  const [failedPosters, setFailedPosters] = useState(new Set());
 
   useEffect(() => {
     soundManager.playBackground('/sounds/hub/hub_lofi.mp3', 0.2);
@@ -140,30 +141,42 @@ const Hub = () => {
 
           {/* Posters */}
           <PosterArea className="absolute top-[15%] left-[8%] flex gap-12">
-            {['gojo', 'given', 'solo'].map(p => (
-              <Poster
-                key={p}
-                ref={(el) => { posterRefs.current[p] = el; }}
-                onClick={() => handleInteraction(p, false)}
-                onDoubleClick={() => handleInteraction(p, true)}
-                $isFocused={cameraView === p}
-                className="w-32 h-48 cursor-pointer preserve-3d transition-all duration-500"
-              >
-                <div className="poster-inner w-full h-full p-1 bg-white/5 border border-white/10 rounded-sm flex flex-col items-center justify-between shadow-2xl">
-                   <div className="w-full h-full bg-slate-900/50 flex flex-col items-center justify-center relative overflow-hidden">
-                      {p === 'gojo' && <PosterIcon color="#00BFFF">👁️</PosterIcon>}
-                      {p === 'given' && <PosterIcon color="#FFB6C1">🎸</PosterIcon>}
-                      {p === 'solo' && <PosterIcon color="#FFD700">🗡️</PosterIcon>}
-                      <PosterLabel>{p.toUpperCase()}</PosterLabel>
-                   </div>
-                </div>
-                {cameraView === p && (
-                  <PosterInfoOverlay className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                     <span className="font-orbitron text-[6px] text-white tracking-[0.2em]">DOUBLE TAP TO RETURN</span>
-                  </PosterInfoOverlay>
-                )}
-              </Poster>
-            ))}
+            {POSTERS.map(p => {
+              const showImage = p.src && !failedPosters.has(p.id);
+              return (
+                <Poster
+                  key={p.id}
+                  ref={(el) => { posterRefs.current[p.id] = el; }}
+                  onClick={() => handleInteraction(p.id, false)}
+                  onDoubleClick={() => handleInteraction(p.id, true)}
+                  $isFocused={cameraView === p.id}
+                  className="w-32 h-48 cursor-pointer preserve-3d transition-all duration-500"
+                >
+                  <div className="poster-inner w-full h-full p-1 bg-white/5 border border-white/10 rounded-sm flex flex-col items-center justify-between shadow-2xl">
+                    <div className="w-full h-full bg-slate-900/50 flex flex-col items-center justify-center relative overflow-hidden">
+                      {showImage
+                        ? <img
+                            src={p.src}
+                            alt={p.id}
+                            onError={() => setFailedPosters(prev => new Set([...prev, p.id]))}
+                            draggable={false}
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        : <>
+                            <PosterIcon color={p.color}>{p.emoji}</PosterIcon>
+                            <PosterLabel>{p.id.toUpperCase()}</PosterLabel>
+                          </>
+                      }
+                    </div>
+                  </div>
+                  {cameraView === p.id && (
+                    <PosterInfoOverlay className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                      <span className="font-orbitron text-[6px] text-white tracking-[0.2em]">DOUBLE TAP TO RETURN</span>
+                    </PosterInfoOverlay>
+                  )}
+                </Poster>
+              );
+            })}
           </PosterArea>
 
           {/* Desk Area */}

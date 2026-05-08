@@ -63,7 +63,7 @@ export const powerups = [
     initialCharges: 2,
     unlockLevel: 3,
     unlockCondition: 'Unlock at Level 3 or match 4+ shadow orbs',
-    soundEffect: '/sounds/shadow-garden/sfx/system_chime.mp3',
+    soundEffect: '/sounds/shadow-garden/sfx/inverted_spear.mp3',
     activation: 'Select a tile type to erase from existence'
   },
   {
@@ -78,7 +78,7 @@ export const powerups = [
     initialCharges: 1,
     unlockLevel: 4,
     unlockCondition: 'Unlock at Level 4',
-    soundEffect: '/sounds/shadow-garden/sfx/system_chime.mp3',
+    soundEffect: '/sounds/shadow-garden/sfx/divine_dogs.mp3',
     activation: 'Automatic - multiplier activates immediately',
     duration: 15
   },
@@ -94,7 +94,7 @@ export const powerups = [
     initialCharges: 1,
     unlockLevel: 5,
     unlockCondition: 'Unlock at Level 5',
-    soundEffect: '/sounds/shadow-garden/sfx/system_chime.mp3',
+    soundEffect: '/sounds/shadow-garden/sfx/destruction.mp3',
     activation: 'Automatic - annihilates corners with destructive magic'
   },
   {

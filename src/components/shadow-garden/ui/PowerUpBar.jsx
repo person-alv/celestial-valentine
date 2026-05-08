@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import styled from 'styled-components';
 import { powerups } from '../../../data/shadow-garden/powerups';
 
 const PowerUpBar = ({ onActivate, isFreeSwapActive, vertical = false }) => {
   const { powerUsages, unlockedPowers } = useSelector(state => state.shadowGarden);
+  const [failedIcons, setFailedIcons] = useState(new Set());
 
   return (
     <Container className={`flex glass-card bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md ${vertical ? 'flex-col gap-2 p-3' : 'flex-row gap-3 p-4'}`}>
@@ -26,7 +27,18 @@ const PowerUpBar = ({ onActivate, isFreeSwapActive, vertical = false }) => {
             title={isUnlocked ? `${power.name} (${charges} uses)` : `Locked: ${power.name}`}
             className={`relative flex items-center justify-center text-xl transition-all duration-300 ${vertical ? 'w-10 h-10 rounded-lg' : 'w-14 h-14 rounded-full'} ${isUnlocked && charges > 0 ? 'cursor-pointer hover:scale-110' : 'cursor-not-allowed grayscale'}`}
           >
-            {isUnlocked ? power.icon : '🔒'}
+            {isUnlocked
+              ? (!failedIcons.has(power.id)
+                  ? <img
+                      src={`/images/powers/icon_${power.id}.png`}
+                      alt={power.name}
+                      onError={() => setFailedIcons(prev => new Set([...prev, power.id]))}
+                      draggable={false}
+                      style={{ width: '65%', height: '65%', objectFit: 'contain', userSelect: 'none' }}
+                    />
+                  : power.icon)
+              : '🔒'
+            }
 
             {isUnlocked && (
               <ChargeBadge className={`absolute rounded-full bg-sg-shadow border border-white/20 flex items-center justify-center font-mono text-white ${vertical ? '-bottom-0.5 -right-0.5 w-4 h-4 text-[7px]' : '-bottom-1 -right-1 w-6 h-6 text-[10px]'}`}>

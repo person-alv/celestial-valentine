@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
-import { refillPower } from '../../../store/slices/shadowGardenSlice';
+import { refillAllPowers } from '../../../store/slices/shadowGardenSlice';
 import { useSound } from '../../../hooks/useSound';
 
 const MysteryBox = ({ onAlvinBlessing }) => {
   const dispatch = useDispatch();
   const { playSFX } = useSound();
-  const { unlockedPowers } = useSelector(state => state.shadowGarden);
   const [isOpened, setIsOpened] = useState(false);
   const [rewardText, setRewardText] = useState(null);
+  const [closedImgFailed, setClosedImgFailed] = useState(false);
+  const [openedImgFailed, setOpenedImgFailed] = useState(false);
 
   const handleOpen = () => {
     if (isOpened) return;
@@ -21,8 +22,7 @@ const MysteryBox = ({ onAlvinBlessing }) => {
 
     if (rng === 0) {
       setRewardText("Power Refill! ⚡");
-      const randomPowerId = unlockedPowers[Math.floor(Math.random() * unlockedPowers.length)];
-      dispatch(refillPower(randomPowerId));
+      dispatch(refillAllPowers());
     } else if (rng === 1) {
       setRewardText("Alvin's Blessing! 💖");
       if (onAlvinBlessing) onAlvinBlessing();
@@ -38,10 +38,29 @@ const MysteryBox = ({ onAlvinBlessing }) => {
       <BoxContainer 
         onClick={handleOpen}
         $isOpened={isOpened}
-        className={`w-20 h-20 flex items-center justify-center text-4xl transition-all duration-500 cursor-pointer ${isOpened ? 'opacity-50 grayscale' : 'animate-bounce'}`}
+        className={`w-24 h-24 flex items-center justify-center text-5xl transition-all duration-500 cursor-pointer ${isOpened ? 'opacity-50 grayscale' : 'animate-bounce'}`}
       >
-        {isOpened ? '📦' : '🎁'}
-        
+        {isOpened
+          ? (openedImgFailed
+              ? '📦'
+              : <img
+                  src="/images/mystery_box/box_opened.png"
+                  alt="opened"
+                  onError={() => setOpenedImgFailed(true)}
+                  draggable={false}
+                  style={{ width: '90%', height: '90%', objectFit: 'contain', userSelect: 'none' }}
+                />)
+          : (closedImgFailed
+              ? '🎁'
+              : <img
+                  src="/images/mystery_box/box_closed.png"
+                  alt="Mystery Box"
+                  onError={() => setClosedImgFailed(true)}
+                  draggable={false}
+                  style={{ width: '90%', height: '90%', objectFit: 'contain', userSelect: 'none' }}
+                />)
+        }
+
         {!isOpened && (
           <div className="absolute inset-0 bg-sg-gold/20 animate-ping rounded-xl pointer-events-none" />
         )}

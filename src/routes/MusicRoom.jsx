@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+import { Howl } from 'howler';
 import { useSound } from '../hooks/useSound';
 import { loveNotes } from '../data/shadow-garden/loveNotes';
 import { rekindleJourney } from '../store/slices/shadowGardenSlice';
@@ -9,11 +10,13 @@ import { rekindleJourney } from '../store/slices/shadowGardenSlice';
 const MusicRoom = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { playBackground, playSFX, stopBackground } = useSound();
+  const { playBackground, playSFX, setBackgroundVolume } = useSound();
+  const voiceRef = useRef(null);
   const [activeVinyl, setActiveVinyl] = useState(null);
   const [showPhoto, setShowPhoto] = useState(null);
   const [showNote, setShowNote] = useState(null);
   const [showConfirmRestart, setShowConfirmRestart] = useState(false);
+  const [activeDoll, setActiveDoll] = useState(null);
 
   const voiceNotes = [
     { id: 1, title: "Our First Hello", date: "Feb 2024" },
@@ -31,20 +34,75 @@ const MusicRoom = () => {
     { id: 5, caption: "Forever and always. ❤️" }
   ];
 
+  // Drop images into public/images/photos/ and public/images/dolls/ — see READMEs there.
+  const dolls = [
+    { id: 1, emoji: '🧸', src: '/images/dolls/doll_1.png', name: 'Hesitation',   label: 'First Of the Fallen Five'             },
+    { id: 2, emoji: '🦊', src: '/images/dolls/doll_2.png', name: 'Silence',   label: 'No Match For Hunter Faith'       },
+    { id: 3, emoji: '🐰', src: '/images/dolls/doll_3.png', name: 'Loneliness',label: 'Chose the Path to Destruction'  },
+    { id: 4, emoji: '🐼', src: '/images/dolls/doll_4.png', name: 'Distance', label: 'Love will Always Prevail'        },
+    { id: 5, emoji: '🐱', src: '/images/dolls/doll_5.png', name: 'Final Trial',   label: 'Worthy Opponent but S-Rank Hunter Awakened'         },
+    { id: 6, emoji: '👑', src: '/images/dolls/doll_6.png', name: 'Anos Voldigoad',  label: 'Demon King'          },
+    { id: 7, emoji: '⚔️', src: '/images/dolls/doll_7.png', name: 'Meliodas',        label: "Dragon's Sin"        },
+    { id: 8, emoji: '🔮', src: '/images/dolls/doll_8.png', name: 'Placeholder VIII', label: 'Coming Soon'        },
+    { id: 9, emoji: '🌙', src: '/images/dolls/doll_9.png', name: 'Faith & Alvin',  label: 'Forever ❤️'         },
+  ];
+
+  const [failedPhotos, setFailedPhotos] = useState(new Set());
+  const [failedDolls,  setFailedDolls]  = useState(new Set());
+
+  const handlePhotoImgError = useCallback((id) => {
+    setFailedPhotos(prev => new Set([...prev, id]));
+  }, []);
+
+  const handleDollImgError = useCallback((id) => {
+    setFailedDolls(prev => new Set([...prev, id]));
+  }, []);
+
   useEffect(() => {
     playBackground('/sounds/music_room_ambient.mp3', 0.3);
-    return () => stopBackground();
-  }, [playBackground, stopBackground]);
+  }, [playBackground]);
+
+  // Stop any orphaned voice note Howl on unmount
+  useEffect(() => {
+    return () => {
+      if (voiceRef.current) {
+        voiceRef.current.stop();
+        voiceRef.current = null;
+      }
+    };
+  }, []);
 
   const handleVinylClick = (id) => {
-    if (activeVinyl === id) {
-      setActiveVinyl(null);
-      playBackground('/sounds/music_room_ambient.mp3', 0.3);
-    } else {
-      setActiveVinyl(id);
-      playSFX('vinyl_scratch', '/sounds/shadow-garden/sfx/vinyl_scratch.mp3');
-      playBackground(`/sounds/voice_notes/note_${id}.mp3`, 0.6, false);
+    // Always stop any currently-playing voice note first
+    if (voiceRef.current) {
+      voiceRef.current.stop();
+      voiceRef.current = null;
     }
+
+    if (activeVinyl === id) {
+      // Toggle off — restore ambient to full volume
+      setActiveVinyl(null);
+      setBackgroundVolume(0.3);
+      return;
+    }
+
+    // New voice note — duck ambient, play note as a separate Howl
+    setActiveVinyl(id);
+    playSFX('vinyl_scratch', '/sounds/shadow-garden/sfx/vinyl_scratch.mp3');
+    setBackgroundVolume(0.08);
+
+    const noteHowl = new Howl({
+      src: [`/sounds/voice_notes/note_${id}.mp3`],
+      volume: 0.85,
+      html5: true,
+      onend: () => {
+        setActiveVinyl(null);
+        setBackgroundVolume(0.3);
+        voiceRef.current = null;
+      },
+    });
+    voiceRef.current = noteHowl;
+    noteHowl.play();
   };
 
   const handlePhotoClick = (id) => {
@@ -115,9 +173,12 @@ const MusicRoom = () => {
             <h4 className="font-orbitron text-[10px] text-white/40 border-b border-white/10 pb-1 mt-4">LOVE NOTES</h4>
             <div className="grid grid-cols-3 gap-2">
               {loveNotes.map(note => (
-                <button 
+                <button
                   key={note.id}
-                  onClick={() => setShowNote(note)}
+                  onClick={() => {
+                    setShowNote(note);
+                    playSFX('sparkle', '/sounds/sparkle.mp3');
+                  }}
                   className="bg-sg-purple/20 border border-sg-purple/40 p-2 rounded hover:bg-sg-purple/40 transition-all text-xl"
                 >
                   📝
@@ -128,16 +189,64 @@ const MusicRoom = () => {
         </Section>
 
         {/* Center: Doll Display */}
-        <Section className="flex-[1.5] glass-card p-8 flex flex-col items-center justify-between relative">
+        <Section className="flex-[1.5] glass-card px-3 py-6 flex flex-col items-center justify-between relative">
           <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest">HUNTER'S COLLECTION</SectionTitle>
-          
-          <div className="flex-1 w-full flex items-center justify-center gap-4 relative">
-            <Shelf className="absolute bottom-1/4 w-[90%] h-4 bg-gradient-to-b from-[#3d2b1f] to-[#1a120d] rounded-sm shadow-2xl" />
-            {['🧸', '🦊', '🐰', '🐼', '🐱'].map((emoji, i) => (
-              <DollWrapper key={i} className="group relative">
-                <Doll className="text-7xl cursor-pointer transition-all duration-500 group-hover:-translate-y-8 group-hover:scale-125 drop-shadow-xl">{emoji}</Doll>
-              </DollWrapper>
-            ))}
+
+          <div className="flex-1 w-full flex flex-col justify-around py-2 gap-2">
+            {/* Shelf row 1 — dolls 1–5 */}
+            <div className="w-full flex items-end justify-center gap-0 relative pb-5">
+              <Shelf className="absolute bottom-0 w-[90%] h-4 bg-gradient-to-b from-[#3d2b1f] to-[#1a120d] rounded-sm shadow-2xl" />
+              {dolls.slice(0, 5).map(doll => (
+                <DollWrapper
+                  key={doll.id}
+                  className="group relative flex-1 flex justify-center"
+                  onClick={() => {
+                    setActiveDoll(doll);
+                    playSFX('sparkle', '/sounds/sparkle.mp3');
+                  }}
+                >
+                  <Doll className="text-8xl cursor-pointer transition-all duration-500 group-hover:-translate-y-8 group-hover:scale-125 drop-shadow-xl">
+                    {failedDolls.has(doll.id)
+                      ? doll.emoji
+                      : <img
+                          src={doll.src}
+                          alt={doll.name}
+                          onError={() => handleDollImgError(doll.id)}
+                          draggable={false}
+                          style={{ width: '1em', height: '1em', objectFit: 'contain' }}
+                        />
+                    }
+                  </Doll>
+                </DollWrapper>
+              ))}
+            </div>
+            {/* Shelf row 2 — dolls 6–9 */}
+            <div className="w-full flex items-end justify-center gap-0 relative pb-5">
+              <Shelf className="absolute bottom-0 w-[90%] h-4 bg-gradient-to-b from-[#3d2b1f] to-[#1a120d] rounded-sm shadow-2xl" />
+              {dolls.slice(5).map(doll => (
+                <DollWrapper
+                  key={doll.id}
+                  className="group relative flex-1 flex justify-center"
+                  onClick={() => {
+                    setActiveDoll(doll);
+                    playSFX('sparkle', '/sounds/sparkle.mp3');
+                  }}
+                >
+                  <Doll className="text-8xl cursor-pointer transition-all duration-500 group-hover:-translate-y-8 group-hover:scale-125 drop-shadow-xl">
+                    {failedDolls.has(doll.id)
+                      ? doll.emoji
+                      : <img
+                          src={doll.src}
+                          alt={doll.name}
+                          onError={() => handleDollImgError(doll.id)}
+                          draggable={false}
+                          style={{ width: '1em', height: '1em', objectFit: 'contain' }}
+                        />
+                    }
+                  </Doll>
+                </DollWrapper>
+              ))}
+            </div>
           </div>
 
           <div className="w-full bg-black/40 p-4 rounded-xl border border-white/5 text-center">
@@ -150,13 +259,21 @@ const MusicRoom = () => {
           <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest mb-4">PHOTO GALLERY</SectionTitle>
           <div className="grid grid-cols-1 gap-4 w-full overflow-y-auto hide-scrollbar">
             {photos.map(photo => (
-              <PhotoFrame 
+              <PhotoFrame
                 key={photo.id}
                 onClick={() => handlePhotoClick(photo.id)}
                 className="w-full bg-white p-2 shadow-2xl transform rotate-[-1deg] hover:rotate-0 transition-all cursor-pointer"
               >
                 <div className="w-full aspect-video bg-gray-200 overflow-hidden relative">
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-mono text-[8px]">IMG_{photo.id}</div>
+                  {failedPhotos.has(photo.id)
+                    ? <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-mono text-[8px]">MEMORY_00{photo.id}</div>
+                    : <img
+                        src={`/images/photos/photo_${photo.id}.jpg`}
+                        alt={photo.caption}
+                        onError={() => handlePhotoImgError(photo.id)}
+                        className="w-full h-full object-cover"
+                      />
+                  }
                 </div>
                 <p className="font-dancing text-black text-center mt-2 text-sm">{photo.caption}</p>
               </PhotoFrame>
@@ -181,14 +298,22 @@ const MusicRoom = () => {
       {showPhoto && (
         <ModalOverlay onClick={() => setShowPhoto(null)}>
           <div className="bg-white p-4 rounded-sm shadow-2xl max-w-4xl animate-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
-            <div className="w-[600px] h-[400px] bg-gray-100 flex items-center justify-center border border-gray-200 relative">
-               <span className="font-mono text-gray-400">MEMORY_00{showPhoto}</span>
-               <button 
+            <div className="w-[600px] h-[400px] bg-gray-100 flex items-center justify-center border border-gray-200 relative overflow-hidden">
+              {failedPhotos.has(showPhoto)
+                ? <span className="font-mono text-gray-400">MEMORY_00{showPhoto}</span>
+                : <img
+                    src={`/images/photos/photo_${showPhoto}.jpg`}
+                    alt={photos.find(p => p.id === showPhoto)?.caption}
+                    onError={() => handlePhotoImgError(showPhoto)}
+                    className="w-full h-full object-cover"
+                  />
+              }
+              <button
                 onClick={(e) => handleDownload(e, showPhoto)}
                 className="absolute bottom-4 right-4 bg-black/10 hover:bg-black/20 p-2 rounded-full"
-               >
-                 💾
-               </button>
+              >
+                💾
+              </button>
             </div>
             <div className="p-4 text-center">
               <h2 className="font-dancing text-3xl text-black">{photos.find(p => p.id === showPhoto)?.caption}</h2>
@@ -207,6 +332,39 @@ const MusicRoom = () => {
             <button onClick={() => setShowNote(null)} className="mt-8 bg-sg-gold text-black px-6 py-1 rounded-full font-bold text-xs">CLOSE</button>
           </div>
         </ModalOverlay>
+      )}
+
+      {/* Doll zoom modal */}
+      {activeDoll && (
+        <DollModalOverlay onClick={() => setActiveDoll(null)}>
+          <DollModalCard onClick={e => e.stopPropagation()}>
+            <DollZoomFigure>
+              {failedDolls.has(activeDoll.id)
+                ? <span style={{ fontSize: '120px' }}>{activeDoll.emoji}</span>
+                : <DollZoomImg
+                    src={activeDoll.src}
+                    alt={activeDoll.name}
+                    onError={() => {
+                      handleDollImgError(activeDoll.id);
+                    }}
+                    draggable={false}
+                  />
+              }
+            </DollZoomFigure>
+            <DollZoomName className="font-orbitron text-sg-gold tracking-widest uppercase">
+              {activeDoll.name}
+            </DollZoomName>
+            <DollZoomLabel className="font-dancing text-sg-pink">
+              {activeDoll.label}
+            </DollZoomLabel>
+            <button
+              onClick={() => setActiveDoll(null)}
+              className="mt-6 font-orbitron text-[10px] text-white/30 hover:text-white transition-colors uppercase tracking-widest"
+            >
+              [ close ]
+            </button>
+          </DollModalCard>
+        </DollModalOverlay>
       )}
 
       {showConfirmRestart && (
@@ -257,5 +415,73 @@ const DollWrapper = styled.div``;
 const Doll = styled.div``;
 const PhotoFrame = styled.div``;
 const ModalOverlay = styled.div` position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; `;
+
+/* ── Doll zoom modal ── */
+const dollZoomIn = keyframes`
+  from { transform: scale(0.25) translateY(40px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+`;
+
+const dollWobble = keyframes`
+  0%   { transform: rotate(0deg); }
+  15%  { transform: rotate(-6deg) scale(1.04); }
+  30%  { transform: rotate(5deg)  scale(1.06); }
+  45%  { transform: rotate(-4deg) scale(1.04); }
+  60%  { transform: rotate(3deg)  scale(1.02); }
+  75%  { transform: rotate(-2deg) scale(1.01); }
+  100% { transform: rotate(0deg)  scale(1); }
+`;
+
+const DollModalOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const DollModalCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 48px;
+  background: linear-gradient(135deg, rgba(10, 0, 30, 0.95) 0%, rgba(30, 0, 60, 0.95) 100%);
+  border: 2px solid rgba(157, 78, 221, 0.6);
+  border-radius: 28px;
+  box-shadow: 0 0 60px rgba(157, 78, 221, 0.35), 0 0 120px rgba(255, 105, 180, 0.15), inset 0 0 40px rgba(157, 78, 221, 0.06);
+  animation: ${dollZoomIn} 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+`;
+
+const DollZoomFigure = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: ${dollWobble} 0.65s ease-out 0.3s 1;
+  filter: drop-shadow(0 8px 24px rgba(157, 78, 221, 0.5));
+`;
+
+const DollZoomImg = styled.img`
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+`;
+
+const DollZoomName = styled.div`
+  font-size: 13px;
+  letter-spacing: 0.35em;
+  margin-bottom: 6px;
+  text-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
+`;
+
+const DollZoomLabel = styled.div`
+  font-size: 22px;
+  text-shadow: 0 0 14px rgba(255, 182, 193, 0.6);
+`;
 
 export default MusicRoom;
