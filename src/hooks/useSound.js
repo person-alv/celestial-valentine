@@ -119,6 +119,7 @@ export const useSound = () => {
       sfxRegistry.current[name] = new Howl({
         src: [actualSrc],
         volume: volume * (sfxVolume || 1.0),
+        html5: true,
       });
     }
 

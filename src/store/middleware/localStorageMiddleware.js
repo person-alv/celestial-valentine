@@ -1,11 +1,17 @@
 const STORAGE_KEY_PREFIX = 'celestial_valentine_';
 
+// High-frequency actions that update session-only state — skipping these
+// stops the 1-write/second localStorage flood from tickTimer.
+const SKIP_SAVE_ACTIONS = new Set([
+  'shadowGarden/tickTimer',
+]);
+
 const localStorageMiddleware = store => next => action => {
   const result = next(action);
   const state = store.getState();
-  
-  // Save Shadow Garden state
-  if (action.type?.startsWith('shadowGarden/')) {
+
+  // Save Shadow Garden state (skip high-frequency / session-only actions)
+  if (action.type?.startsWith('shadowGarden/') && !SKIP_SAVE_ACTIONS.has(action.type)) {
     localStorage.setItem(
       `${STORAGE_KEY_PREFIX}shadow_garden`,
       JSON.stringify(state.shadowGarden)
@@ -28,8 +34,17 @@ export const loadStateFromStorage = () => {
     const shadowGardenState = localStorage.getItem(`${STORAGE_KEY_PREFIX}shadow_garden`);
     const valentineState = localStorage.getItem(`${STORAGE_KEY_PREFIX}valentine`);
     
+    const shadowGarden = shadowGardenState ? JSON.parse(shadowGardenState) : undefined;
     return {
-      shadowGarden: shadowGardenState ? JSON.parse(shadowGardenState) : undefined,
+      shadowGarden: shadowGarden ? {
+        ...shadowGarden,
+        // Session-transient fields — always reset to safe defaults on load
+        sfxMuted: false,
+        musicMuted: false,
+        isDomainExpansionActive: false,
+        scoreMultiplier: 1,
+        scoreMultiplierExpiresAt: 0,
+      } : undefined,
       valentine: valentineState ? JSON.parse(valentineState) : undefined
     };
   } catch (error) {

@@ -26,29 +26,36 @@ const MusicRoom = () => {
     { id: 5, title: "A Special Message", date: "Valentine 2026" }
   ];
 
+  // aspectRatio derived from measured pixel dimensions of each file in public/images/photos/
   const photos = [
-    { id: 1, caption: "The day we met... ✨" },
-    { id: 2, caption: "Coffee dates and rainy days. ☕" },
-    { id: 3, caption: "Under the summer sun. ☀️" },
-    { id: 4, caption: "Making magic together. 🪄" },
-    { id: 5, caption: "Forever and always. ❤️" }
+    { id: 1, caption: "The day we met... ✨",            aspectRatio: "9/16" },  // 900×1600
+    { id: 9, caption: "Always by your side. 🌙",        aspectRatio: "9/16" },  // update ratio once file is measured
+    { id: 2, caption: "Coffee dates and rainy days. ☕", aspectRatio: "4/3",  colSpan: 2 },  // 1393×1080 landscape — own row
+    { id: 3, caption: "Under the summer sun. ☀️",        aspectRatio: "9/16" },  // 720×1280
+    { id: 4, caption: "Making magic together. 🪄",        aspectRatio: "9/16" },  // 720×1280
+    { id: 5, caption: "Making magic together. 🪄",        aspectRatio: "4/7"  },  // 862×1509
+    { id: 6, caption: "Making magic together. 🪄",        aspectRatio: "3/4"  },  // 899×1190
+    { id: 7, caption: "Making magic together. 🪄",        aspectRatio: "8/9"  },  // 780×880
+    { id: 8, caption: "Forever and always. ❤️",          aspectRatio: "1/1"  },  // 899×907
   ];
 
   // Drop images into public/images/photos/ and public/images/dolls/ — see READMEs there.
   const dolls = [
-    { id: 1, emoji: '🧸', src: '/images/dolls/doll_1.png', name: 'Hesitation',   label: 'First Of the Fallen Five'             },
-    { id: 2, emoji: '🦊', src: '/images/dolls/doll_2.png', name: 'Silence',   label: 'No Match For Hunter Faith'       },
-    { id: 3, emoji: '🐰', src: '/images/dolls/doll_3.png', name: 'Loneliness',label: 'Chose the Path to Destruction'  },
-    { id: 4, emoji: '🐼', src: '/images/dolls/doll_4.png', name: 'Distance', label: 'Love will Always Prevail'        },
-    { id: 5, emoji: '🐱', src: '/images/dolls/doll_5.png', name: 'Final Trial',   label: 'Worthy Opponent but S-Rank Hunter Awakened'         },
-    { id: 6, emoji: '👑', src: '/images/dolls/doll_6.png', name: 'Anos Voldigoad',  label: 'Demon King'          },
-    { id: 7, emoji: '⚔️', src: '/images/dolls/doll_7.png', name: 'Meliodas',        label: "Dragon's Sin"        },
-    { id: 8, emoji: '🔮', src: '/images/dolls/doll_8.png', name: 'Placeholder VIII', label: 'Coming Soon'        },
-    { id: 9, emoji: '🌙', src: '/images/dolls/doll_9.png', name: 'Faith & Alvin',  label: 'Forever ❤️'         },
+    { id: 1, emoji: '🧸', src: '/images/dolls/doll_1.png', name: 'Hesitation',   label: 'First Of the Fallen Five.'             },
+    { id: 2, emoji: '🦊', src: '/images/dolls/doll_2.png', name: 'Silence',   label: 'No Match For Hunter Faith.'       },
+    { id: 3, emoji: '🐰', src: '/images/dolls/doll_3.png', name: 'Loneliness',label: 'Chose the Path to Destruction.'  },
+    { id: 4, emoji: '🐼', src: '/images/dolls/doll_4.png', name: 'Distance', label: 'Love will Always Prevail.'        },
+    { id: 5, emoji: '🐱', src: '/images/dolls/doll_5.png', name: 'Final Trial',   label: 'Worthy Opponent but S-Rank Hunter Awakened.'         },
+    { id: 6, emoji: '👑', src: '/images/dolls/doll_6.png', name: 'Koro-Sensei',  label: 'Best Teacher Ever !!'          },
+    { id: 7, emoji: '⚔️', src: '/images/dolls/doll_7.png', name: 'Gibson ES-330 belonging to Mafuyu', label: "Legendary Guitar Used By Mafuyu From Given."        },
+    { id: 8, emoji: '🔮', src: '/images/dolls/doll_8.png', name: 'Shadow Monarch Deadly Dagger', label: 'One of Many Blades belonging to the Shadow Monarch.'        },
+    { id: 9, emoji: '🌙', src: '/images/dolls/doll_9.png', name: 'Sukuna Finger',  label: 'Artifact Belonging to the King of Curses that started it all.'         },
   ];
 
-  const [failedPhotos, setFailedPhotos] = useState(new Set());
-  const [failedDolls,  setFailedDolls]  = useState(new Set());
+  const [failedPhotos,   setFailedPhotos]   = useState(new Set());
+  const [failedDolls,    setFailedDolls]    = useState(new Set());
+  // Isolated from failedPhotos — a modal load error must never poison the gallery thumbnails
+  const [modalImgFailed, setModalImgFailed] = useState(false);
 
   const handlePhotoImgError = useCallback((id) => {
     setFailedPhotos(prev => new Set([...prev, id]));
@@ -106,6 +113,7 @@ const MusicRoom = () => {
   };
 
   const handlePhotoClick = (id) => {
+    setModalImgFailed(false); // reset before each open so a fresh load is always attempted
     setShowPhoto(id);
     playSFX('shutter', '/sounds/shadow-garden/sfx/shutter.mp3');
   };
@@ -257,25 +265,29 @@ const MusicRoom = () => {
         {/* Right: Gallery Wall */}
         <Section className="flex-1 glass-card p-6 flex flex-col items-center">
           <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest mb-4">PHOTO GALLERY</SectionTitle>
-          <div className="grid grid-cols-1 gap-4 w-full overflow-y-auto hide-scrollbar">
+          <div className="grid grid-cols-2 gap-3 w-full overflow-y-auto hide-scrollbar">
             {photos.map(photo => (
               <PhotoFrame
                 key={photo.id}
                 onClick={() => handlePhotoClick(photo.id)}
                 className="w-full bg-white p-2 shadow-2xl transform rotate-[-1deg] hover:rotate-0 transition-all cursor-pointer"
+                style={photo.colSpan === 2 ? { gridColumn: 'span 2' } : undefined}
               >
-                <div className="w-full aspect-video bg-gray-200 overflow-hidden relative">
+                <div
+                  className="w-full bg-gray-200 overflow-hidden relative"
+                  style={{ aspectRatio: photo.aspectRatio }}
+                >
                   {failedPhotos.has(photo.id)
                     ? <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-mono text-[8px]">MEMORY_00{photo.id}</div>
                     : <img
-                        src={`/images/photos/photo_${photo.id}.jpg`}
+                        src={`/images/photos/photo_${photo.id}.jpeg`}
                         alt={photo.caption}
                         onError={() => handlePhotoImgError(photo.id)}
                         className="w-full h-full object-cover"
                       />
                   }
                 </div>
-                <p className="font-dancing text-black text-center mt-2 text-sm">{photo.caption}</p>
+                <p className="font-dancing text-black text-center mt-1 text-xs leading-tight">{photo.caption}</p>
               </PhotoFrame>
             ))}
           </div>
@@ -295,33 +307,47 @@ const MusicRoom = () => {
       </Footer>
 
       {/* Overlays */}
-      {showPhoto && (
-        <ModalOverlay onClick={() => setShowPhoto(null)}>
-          <div className="bg-white p-4 rounded-sm shadow-2xl max-w-4xl animate-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
-            <div className="w-[600px] h-[400px] bg-gray-100 flex items-center justify-center border border-gray-200 relative overflow-hidden">
-              {failedPhotos.has(showPhoto)
-                ? <span className="font-mono text-gray-400">MEMORY_00{showPhoto}</span>
-                : <img
-                    src={`/images/photos/photo_${showPhoto}.jpg`}
-                    alt={photos.find(p => p.id === showPhoto)?.caption}
-                    onError={() => handlePhotoImgError(showPhoto)}
-                    className="w-full h-full object-cover"
-                  />
-              }
-              <button
-                onClick={(e) => handleDownload(e, showPhoto)}
-                className="absolute bottom-4 right-4 bg-black/10 hover:bg-black/20 p-2 rounded-full"
+      {showPhoto && (() => {
+        const currentPhoto = photos.find(p => p.id === showPhoto);
+        return (
+          <ModalOverlay onClick={() => setShowPhoto(null)}>
+            <div className="bg-white p-4 rounded-sm shadow-2xl animate-in zoom-in duration-300" onClick={e => e.stopPropagation()}
+              style={{ maxWidth: '90vw', maxHeight: '95vh', display: 'flex', flexDirection: 'column' }}
+            >
+              <div
+                className="bg-gray-100 overflow-hidden relative"
+                style={{
+                  aspectRatio: currentPhoto?.aspectRatio,
+                  maxHeight: '80vh',
+                  maxWidth: '85vw',
+                  width: '100%',
+                  flex: '0 0 auto',
+                }}
               >
-                💾
-              </button>
+                {modalImgFailed
+                  ? <div className="absolute inset-0 flex items-center justify-center text-gray-400 font-mono text-sm">MEMORY_00{showPhoto}</div>
+                  : <img
+                      src={`/images/photos/photo_${showPhoto}.jpeg`}
+                      alt={currentPhoto?.caption}
+                      onError={() => setModalImgFailed(true)}
+                      className="w-full h-full object-contain"
+                    />
+                }
+                <button
+                  onClick={(e) => handleDownload(e, showPhoto)}
+                  className="absolute bottom-4 right-4 bg-black/30 hover:bg-black/50 p-2 rounded-full text-white"
+                >
+                  💾
+                </button>
+              </div>
+              <div className="py-3 px-2 text-center flex-shrink-0">
+                <h2 className="font-dancing text-2xl text-black">{currentPhoto?.caption}</h2>
+                <button onClick={() => setShowPhoto(null)} className="mt-3 font-orbitron text-[10px] text-gray-400 uppercase hover:text-gray-600">Close</button>
+              </div>
             </div>
-            <div className="p-4 text-center">
-              <h2 className="font-dancing text-3xl text-black">{photos.find(p => p.id === showPhoto)?.caption}</h2>
-              <button onClick={() => setShowPhoto(null)} className="mt-4 font-orbitron text-[10px] text-gray-400 uppercase">Close</button>
-            </div>
-          </div>
-        </ModalOverlay>
-      )}
+          </ModalOverlay>
+        );
+      })()}
 
       {showNote && (
         <ModalOverlay onClick={() => setShowNote(null)}>

@@ -42,6 +42,21 @@ This guide covers all the new sounds added during the "Shadow Garden" upgrade. P
 - **Use**: Activating Meliodas's "Full Counter" power
 - **Suggested search**: "sword parry", "magic counter"
 
+### 7. **divine_dogs.mp3**
+- **Type**: Ethereal howl or shadow-spirit summon sound
+- **Use**: Activating Megumi's "Ten Shadows: Divine Dogs" power (Power 4)
+- **Suggested search**: "spirit wolf", "shadow summon", "divine beast"
+
+### 8. **inverted_spear.mp3**
+- **Type**: Sharp woosh + impact — a weapon cutting through silence
+- **Use**: Activating Toji's "Inverted Spear of Heaven" power (Power 3)
+- **Suggested search**: "spear throw", "weapon slash", "blade impact"
+
+### 8. **destruction.mp3**
+- **Type**: Deep resonant burst — ancient destructive magic
+- **Use**: Activating Anos's "Magic Eyes of Destruction" power (Power 5)
+- **Suggested search**: "eye beam", "magic explosion", "destruction spell"
+
 ### 7. **domain_expansion.mp3**
 - **Type**: Deep bass drop followed by an epic orchestral swell
 - **Use**: The "Infinite Love" cinematic transition
@@ -99,7 +114,7 @@ This guide covers all the new sounds added during the "Shadow Garden" upgrade. P
 ## Testing Checklist:
 
 - [ ] Directory `/public/sounds/hub/` created and contains `hub_lofi.mp3`
-- [ ] Directory `/public/sounds/shadow-garden/sfx/` contains all 6 SFX listed above
+- [ ] Directory `/public/sounds/shadow-garden/sfx/` contains all 9 SFX listed above
 - [ ] Directory `/public/sounds/voice_notes/` contains your 5 recordings
 - [ ] Music files are named exactly as listed (case-sensitive)
 - [ ] All files work when tested in the browser console
