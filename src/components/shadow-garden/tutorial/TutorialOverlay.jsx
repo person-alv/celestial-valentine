@@ -45,8 +45,8 @@ const TutorialOverlay = ({ onComplete = () => {} }) => {
   if (currentStep.type === 'modal') {
     return (
       <ModalOverlay>
-        <div className="bg-gradient-to-br from-sg-midnight to-sg-purple border-4 border-sg-gold rounded-3xl p-10 max-w-xl text-center shadow-[0_0_50px_rgba(255,215,0,0.3)] animate-in fade-in zoom-in duration-300">
-          <h2 className="font-bangers text-5xl text-sg-gold mb-6 tracking-wider">{currentStep.title}</h2>
+        <div className="bg-gradient-to-br from-sg-midnight to-sg-purple border-4 border-sg-gold rounded-3xl p-6 md:p-10 w-[90vw] max-w-xl text-center shadow-[0_0_50px_rgba(255,215,0,0.3)] animate-in fade-in zoom-in duration-300">
+          <h2 className="font-bangers text-3xl md:text-5xl text-sg-gold mb-6 tracking-wider">{currentStep.title}</h2>
           <p className="font-quicksand text-white text-lg leading-relaxed mb-8">{currentStep.content}</p>
           <div className="flex justify-center gap-4">
             {currentStep.buttons.map((btn, i) => (

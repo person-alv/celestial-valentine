@@ -11,11 +11,8 @@ import {
   setScoreMultiplier,
   tickTimer,
 } from '../store/slices/shadowGardenSlice';
-import { useSound } from './useSound';
-
 export const useMatch3 = () => {
   const dispatch = useDispatch();
-  const { playSFX } = useSound();
   const { powerUsages, currentLevel, timeLeft } = useSelector(s => s.shadowGarden);
 
   // Always-current level ref — lets async chains detect mid-chain level transitions
@@ -249,6 +246,7 @@ export const useMatch3 = () => {
       }
       setSelectedTile(null);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isProcessing, currentLevel, timeLeft, isSelectingRow, isSelectingType, selectedTile, isFreeSwapActive, swapTiles, board]);
 
   // ── INTERNAL POWER FIRE (after targeting or immediate) ──
@@ -308,6 +306,34 @@ export const useMatch3 = () => {
     await _firePower(powerId);
   }, [powerUsages, isProcessing, dispatch, _firePower]);
 
+  // ── TOUCH SWAP: direct swap for Candy Crush gesture (bypasses two-tap selection state) ──
+  const touchSwap = useCallback((row1, col1, row2, col2) => {
+    if (isProcessing || (currentLevel < 5 && timeLeft <= 0)) return;
+
+    // Power targeting modes — treat touch as a targeting tap on the first tile
+    if (isSelectingRow) {
+      setIsSelectingRow(false);
+      pendingPowerRef.current = null;
+      _firePower(0, { row: row1 });
+      return;
+    }
+    if (isSelectingType) {
+      const targetType = board[row1]?.[col1]?.type;
+      if (targetType === undefined) return;
+      setIsSelectingType(false);
+      pendingPowerRef.current = null;
+      _firePower(3, { type: targetType });
+      return;
+    }
+
+    const isAdjacent = Math.abs(row1 - row2) + Math.abs(col1 - col2) === 1;
+    if (isAdjacent || isFreeSwapActive) {
+      swapTiles({ row: row1, col: col1 }, { row: row2, col: col2 }, isFreeSwapActive);
+      if (isFreeSwapActive) setIsFreeSwapActive(false);
+      setSelectedTile(null);
+    }
+  }, [isProcessing, currentLevel, timeLeft, isSelectingRow, isSelectingType, board, isFreeSwapActive, swapTiles, _firePower]);
+
   // ── ALVIN BLESSING: clear least-common tile type ──
   const clearTileType = useCallback(async (type) => {
     setIsProcessing(true);
@@ -330,6 +356,7 @@ export const useMatch3 = () => {
     isSelectingType,
     specialEffects,
     handleTileClick,
+    touchSwap,
     activatePower,
     clearTileType,
   };

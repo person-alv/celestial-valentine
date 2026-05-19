@@ -210,7 +210,7 @@ const Phase4_Constellations = ({ onComplete, progress, onProgress }) => {
     // Find if we ended near any star
     const starIndex = currentConstellation.stars.findIndex(star => {
       const dist = Math.sqrt(Math.pow(star.x - x, 2) + Math.pow(star.y - y, 2));
-      return dist < 6; // Threshold for touch
+      return dist < 8; // Threshold for touch
     });
 
     if (starIndex !== -1) {
@@ -494,10 +494,10 @@ const ConstellationStar = styled.div`
   &::after {
     content: '';
     position: absolute;
-    top: -15px;
-    left: -15px;
-    right: -15px;
-    bottom: -15px;
+    top: -18px;
+    left: -18px;
+    right: -18px;
+    bottom: -18px;
   }
 
   animation: ${pulse} 2s infinite ease-in-out;

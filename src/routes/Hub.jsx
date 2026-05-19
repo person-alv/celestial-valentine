@@ -26,6 +26,8 @@ const Hub = () => {
   const bedroomRef = useRef(null);
   const clickTimer = useRef(null);
   const posterRefs = useRef({});
+  // Per-target timestamp for manual double-tap detection on touch devices
+  const lastTapTime = useRef({});
   const laptopRef = useRef(null);
   const [failedPosters, setFailedPosters] = useState(new Set());
 
@@ -34,17 +36,33 @@ const Hub = () => {
     return () => soundManager.stopBackground();
   }, []);
 
-  // --- SMART CLICK HANDLER ---
+  // --- SMART CLICK / DOUBLE-TAP HANDLER ---
+  // Works for both mouse (onDoubleClick via isDoubleClick=true) and touch
+  // (two taps within 300ms on the same target).
   const handleInteraction = (target, isDoubleClick = false) => {
     if (isDoubleClick) {
       if (clickTimer.current) clearTimeout(clickTimer.current);
+      lastTapTime.current[target] = 0;
       executeZoom(target);
-    } else {
-      if (clickTimer.current) clearTimeout(clickTimer.current);
-      clickTimer.current = setTimeout(() => {
-        executeWindowChange();
-      }, 250); // 250ms window for double click
+      return;
     }
+
+    // Manual double-tap detection for touch devices
+    const now = Date.now();
+    const prev = lastTapTime.current[target] || 0;
+    if (now - prev < 300) {
+      // Second tap within 300ms → zoom
+      if (clickTimer.current) clearTimeout(clickTimer.current);
+      lastTapTime.current[target] = 0;
+      executeZoom(target);
+      return;
+    }
+    lastTapTime.current[target] = now;
+
+    if (clickTimer.current) clearTimeout(clickTimer.current);
+    clickTimer.current = setTimeout(() => {
+      executeWindowChange();
+    }, 250);
   };
 
   const executeWindowChange = () => {
@@ -131,6 +149,15 @@ const Hub = () => {
 
   return (
     <Container className="bg-black overflow-hidden relative w-screen h-screen">
+      {/* Close button for poster zoom — shown on mobile/touch where ESC isn't available */}
+      {cameraView !== 'room' && cameraView !== 'laptop' && (
+        <PosterCloseBtn
+          onClick={() => executeZoom(cameraView)}
+          aria-label="Return to room"
+        >
+          ✕
+        </PosterCloseBtn>
+      )}
       <BedroomWrapper ref={bedroomRef} className="w-full h-full relative origin-center">
         <BackgroundLayer className="absolute inset-0">
           
@@ -148,7 +175,6 @@ const Hub = () => {
                   key={p.id}
                   ref={(el) => { posterRefs.current[p.id] = el; }}
                   onClick={() => handleInteraction(p.id, false)}
-                  onDoubleClick={() => handleInteraction(p.id, true)}
                   $isFocused={cameraView === p.id}
                   className="w-32 h-48 cursor-pointer preserve-3d transition-all duration-500"
                 >
@@ -171,7 +197,7 @@ const Hub = () => {
                   </div>
                   {cameraView === p.id && (
                     <PosterInfoOverlay className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                      <span className="font-orbitron text-[6px] text-white tracking-[0.2em]">DOUBLE TAP TO RETURN</span>
+                      <span className="font-orbitron text-[10px] text-white tracking-[0.2em] drop-shadow-lg">TAP AGAIN TO RETURN</span>
                     </PosterInfoOverlay>
                   )}
                 </Poster>
@@ -295,53 +321,6 @@ const SystemGlitch = styled.div`
   animation: ${glitchAnim} 0.2s infinite;
 `;
 
-const SystemCard = styled.div`
-  position: relative;
-  width: 120px;
-  height: 160px;
-  cursor: pointer;
-  
-  .card-border {
-    position: absolute;
-    inset: 0;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    transition: all 0.3s ease;
-  }
-
-  .card-content {
-    position: absolute;
-    inset: 4px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-  }
-
-  &:hover {
-    .card-border { border-color: #ffd700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
-    .card-content { background: rgba(255, 215, 0, 0.05); }
-  }
-`;
-
-const DisconnectBtn = styled.button`
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.2);
-  font-family: 'Orbitron', sans-serif;
-  font-size: 5px;
-  padding: 4px 12px;
-  border-radius: 99px;
-  cursor: pointer;
-  letter-spacing: 2px;
-  transition: all 0.3s ease;
-  &:hover { color: #e43f5a; border-color: #e43f5a; background: rgba(228, 63, 90, 0.1); }
-`;
-
 const Poster = styled.div`
   ${props => props.$isFocused && css`
     z-index: 100;
@@ -437,6 +416,28 @@ const GameCard = styled.div`
     border-color: ${props => props.$purple ? '#9d4edd' : '#ffd700'};
     box-shadow: 0 0 40px ${props => props.$purple ? 'rgba(123, 44, 191, 0.25)' : 'rgba(255, 215, 0, 0.2)'};
   }
+`;
+
+const PosterCloseBtn = styled.button`
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  &:hover { background: rgba(255,255,255,0.15); }
+  &:active { transform: scale(0.9); }
 `;
 
 const hintShowAndHide = keyframes`

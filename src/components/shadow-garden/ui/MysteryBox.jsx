@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { refillAllPowers } from '../../../store/slices/shadowGardenSlice';
 import { useSound } from '../../../hooks/useSound';
 
-const MysteryBox = ({ onAlvinBlessing }) => {
+const MysteryBox = ({ onAlvinBlessing, compact = false }) => {
   const dispatch = useDispatch();
   const { playSFX } = useSound();
   const [isOpened, setIsOpened] = useState(false);
@@ -33,12 +33,14 @@ const MysteryBox = ({ onAlvinBlessing }) => {
     setTimeout(() => setRewardText(null), 3000);
   };
 
+  const sizeClass = compact ? 'w-9 h-9 text-xl rounded-lg' : 'w-24 h-24 text-5xl rounded-xl';
+
   return (
     <div className="flex flex-col items-center">
-      <BoxContainer 
+      <BoxContainer
         onClick={handleOpen}
         $isOpened={isOpened}
-        className={`w-24 h-24 flex items-center justify-center text-5xl transition-all duration-500 cursor-pointer ${isOpened ? 'opacity-50 grayscale' : 'animate-bounce'}`}
+        className={`${sizeClass} flex items-center justify-center transition-all duration-500 cursor-pointer relative ${isOpened ? 'opacity-50 grayscale' : 'animate-bounce'}`}
       >
         {isOpened
           ? (openedImgFailed
@@ -65,14 +67,16 @@ const MysteryBox = ({ onAlvinBlessing }) => {
           <div className="absolute inset-0 bg-sg-gold/20 animate-ping rounded-xl pointer-events-none" />
         )}
       </BoxContainer>
-      
+
       {rewardText && (
-        <RewardPopup className="font-bangers text-sg-gold text-center whitespace-nowrap mt-2">
+        <RewardPopup className="font-bangers text-sg-gold text-center whitespace-nowrap mt-1 text-sm">
           {rewardText}
         </RewardPopup>
       )}
-      
-      <span className="font-mono text-[8px] text-white/30 uppercase mt-1">S-Rank Box</span>
+
+      {!compact && (
+        <span className="font-mono text-[8px] text-white/30 uppercase mt-1">S-Rank Box</span>
+      )}
     </div>
   );
 };

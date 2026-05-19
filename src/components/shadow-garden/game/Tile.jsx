@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import gsap from 'gsap';
 import { TILE_TYPES } from '../../../utils/match3/board';
 
-const Tile = ({ tile, row, col, isSelected, isProcessing, onClick, isRowHighlighted, isTypeTargeting }) => {
+const Tile = ({ tile, row, col, isSelected, isProcessing, onClick, isRowHighlighted, isTypeTargeting, isDragging, dragOffset }) => {
   const animRef = useRef(null);
   const prevTileRef = useRef(tile);
   const isFirstMount = useRef(true);
@@ -95,13 +95,24 @@ const Tile = ({ tile, row, col, isSelected, isProcessing, onClick, isRowHighligh
   const typeInfo = tile ? TILE_TYPES[tile.type] : null;
   const isTypeMatch = isTypeTargeting && tile;
 
+  const dragStyle = isDragging && dragOffset
+    ? {
+        transform: `translate(${dragOffset.dx}px, ${dragOffset.dy}px) scale(1.12)`,
+        transition: 'none',
+        zIndex: 50,
+        filter: 'brightness(1.35) drop-shadow(0 6px 12px rgba(255,215,0,0.5))',
+      }
+    : undefined;
+
   return (
     <TileContainer
       $isSelected={isSelected}
       $isRowHighlighted={isRowHighlighted}
       $isTypeMatch={isTypeMatch}
       $isEmpty={!tile}
+      $isDragging={isDragging}
       onClick={() => onClick(row, col)}
+      style={dragStyle}
       className="relative flex items-center justify-center transition-colors duration-150"
     >
       <AnimatedContent ref={animRef} className="w-full h-full flex items-center justify-center">

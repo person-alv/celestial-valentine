@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useMatch3 } from '../hooks/useMatch3';
 import { useSound } from '../hooks/useSound';
-import gsap from 'gsap';
 import { getLevelConfig } from '../data/shadow-garden/levels';
 import { getPowerById } from '../data/shadow-garden/powerups';
 
@@ -72,6 +71,7 @@ const ShadowGarden = () => {
     isSelectingType,
     specialEffects,
     handleTileClick,
+    touchSwap,
     activatePower,
     clearTileType,
   } = useMatch3();
@@ -191,11 +191,11 @@ const ShadowGarden = () => {
 
   // ── Targeting mode cursor hint ──
   const targetingHint = isSelectingRow
-    ? '← CLICK ANY TILE TO TARGET THAT ROW →'
+    ? '— TAP ANY TILE TO TARGET THAT ROW —'
     : isSelectingType
-    ? '← CLICK A TILE TO DESTROY ALL OF ITS TYPE →'
+    ? '— TAP A TILE TO DESTROY ALL OF ITS TYPE —'
     : isFreeSwapActive
-    ? '← RULER\'S AUTHORITY: SWAP ANY TWO TILES →'
+    ? '— RULER\'S AUTHORITY: SWAP ANY TWO TILES —'
     : null;
 
   if (isLoading) return <LoadingScreen message="ENTERING THE SHADOW GARDEN..." />;
@@ -233,6 +233,13 @@ const ShadowGarden = () => {
               )}
             </div>
 
+            {/* Combo — mobile shows here in stats row; desktop shows in left panel */}
+            {comboCount >= 2 && (
+              <div className="lg:hidden">
+                <ComboDisplay comboCount={comboCount} />
+              </div>
+            )}
+
             {/* Targeting hint bar */}
             {targetingHint && (
               <TargetingBanner
@@ -249,6 +256,7 @@ const ShadowGarden = () => {
                 selectedTile={selectedTile}
                 isProcessing={isProcessing}
                 onTileClick={handleTileClick}
+                onTouchSwap={touchSwap}
                 isSelectingRow={isSelectingRow}
                 isSelectingType={isSelectingType}
                 specialEffects={specialEffects}
@@ -310,6 +318,22 @@ const ShadowGarden = () => {
         {isDomainExpansionActive && (
           <DomainExpansion onComplete={handleDomainComplete} onAudioStart={handleDomainAudioStart} />
         )}
+
+        {/* ── MOBILE POWER BAR (hidden on lg+) ── */}
+        <MobilePowerBar className="lg:hidden absolute bottom-[52px] left-0 right-0 z-20">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="flex-1">
+              <PowerUpBar
+                onActivate={handlePowerActivation}
+                isFreeSwapActive={isFreeSwapActive}
+                compact
+              />
+            </div>
+            <div className="flex-shrink-0">
+              <MysteryBox onAlvinBlessing={handleAlvinBlessing} compact />
+            </div>
+          </div>
+        </MobilePowerBar>
 
         {/* Tutorial */}
         {!tutorialCompleted && <TutorialOverlay />}
@@ -387,6 +411,13 @@ const StatCard = ({ label, value, isTime }) => (
     </span>
   </div>
 );
+
+const MobilePowerBar = styled.div`
+  background: rgba(5, 5, 15, 0.92);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(123, 44, 191, 0.35);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+`;
 
 const SkipButton = styled.button`
   background: rgba(123,44,191,0.3);

@@ -136,7 +136,7 @@ const MusicRoom = () => {
   };
 
   return (
-    <Container className="w-screen h-screen bg-[#0a0a12] relative overflow-hidden flex flex-col items-center justify-center">
+    <Container className="w-screen min-h-screen md:h-screen bg-[#0a0a12] relative overflow-y-auto md:overflow-hidden flex flex-col items-center md:justify-center justify-start">
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] opacity-90" />
       
       <Stars className="absolute inset-0">
@@ -150,14 +150,14 @@ const MusicRoom = () => {
       </Stars>
 
       <Header className="relative z-10 mb-4 text-center">
-        <h1 className="font-dancing text-6xl text-sg-pink drop-shadow-[0_0_15px_rgba(255,182,193,0.5)]">The Heart Domain</h1>
+        <h1 className="font-dancing text-4xl md:text-6xl text-sg-pink drop-shadow-[0_0_15px_rgba(255,182,193,0.5)]">The Heart Domain</h1>
         <p className="font-orbitron text-[10px] text-white/40 tracking-[0.5rem] uppercase mt-2">Faith & Alvin's Sanctuary</p>
       </Header>
 
-      <MainContent className="relative z-10 w-full max-w-7xl h-[75vh] flex gap-6 p-4">
+      <MainContent className="relative z-10 w-full max-w-7xl flex flex-col md:flex-row md:h-[75vh] gap-4 md:gap-6 p-3 md:p-4">
         
         {/* Left: Vinyl Player & Notes */}
-        <Section className="flex-1 glass-card p-6 flex flex-col items-center gap-4">
+        <Section className="flex-1 min-h-[300px] md:min-h-0 glass-card p-4 md:p-6 flex flex-col items-center gap-4">
           <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest mb-4">ARCHIVE</SectionTitle>
           
           <div className="w-full flex-1 flex flex-col gap-4 overflow-y-auto hide-scrollbar">
@@ -197,7 +197,7 @@ const MusicRoom = () => {
         </Section>
 
         {/* Center: Doll Display */}
-        <Section className="flex-[1.5] glass-card px-3 py-6 flex flex-col items-center justify-between relative">
+        <Section className="flex-[1.5] min-h-[320px] md:min-h-0 glass-card px-3 py-4 md:py-6 flex flex-col items-center justify-between relative">
           <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest">HUNTER'S COLLECTION</SectionTitle>
 
           <div className="flex-1 w-full flex flex-col justify-around py-2 gap-2">
@@ -263,7 +263,7 @@ const MusicRoom = () => {
         </Section>
 
         {/* Right: Gallery Wall */}
-        <Section className="flex-1 glass-card p-6 flex flex-col items-center">
+        <Section className="flex-1 min-h-[400px] md:min-h-0 glass-card p-4 md:p-6 flex flex-col items-center">
           <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest mb-4">PHOTO GALLERY</SectionTitle>
           <div className="grid grid-cols-2 gap-3 w-full overflow-y-auto hide-scrollbar">
             {photos.map(photo => (
@@ -473,12 +473,19 @@ const DollModalCard = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 40px 48px;
+  padding: 24px 20px;
+  max-width: 90vw;
+  width: 100%;
   background: linear-gradient(135deg, rgba(10, 0, 30, 0.95) 0%, rgba(30, 0, 60, 0.95) 100%);
   border: 2px solid rgba(157, 78, 221, 0.6);
   border-radius: 28px;
   box-shadow: 0 0 60px rgba(157, 78, 221, 0.35), 0 0 120px rgba(255, 105, 180, 0.15), inset 0 0 40px rgba(157, 78, 221, 0.06);
   animation: ${dollZoomIn} 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+
+  @media (min-width: 640px) {
+    padding: 40px 48px;
+    width: auto;
+  }
 `;
 
 const DollZoomFigure = styled.div`
@@ -491,8 +498,8 @@ const DollZoomFigure = styled.div`
 `;
 
 const DollZoomImg = styled.img`
-  width: 220px;
-  height: 220px;
+  width: min(220px, 60vw);
+  height: min(220px, 60vw);
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;

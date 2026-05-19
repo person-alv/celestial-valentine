@@ -68,11 +68,6 @@ const flicker = keyframes`
   90%, 92% { opacity: 0.75; }
 `;
 
-const scanMove = keyframes`
-  0%   { background-position: 0 0; }
-  100% { background-position: 0 100%; }
-`;
-
 const Container = styled.div`
   width: 100vw;
   height: 100vh;
@@ -110,9 +105,15 @@ const Content = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 18px;
-  padding: 56px 64px;
+  padding: 56px 24px;
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 480px;
+
+  @media (min-width: 640px) {
+    padding: 56px 64px;
+  }
 `;
 
 const EyeGlyph = styled.div`
@@ -182,6 +183,11 @@ const PrimaryBtn = styled.button`
     box-shadow: 0 0 36px rgba(123, 44, 191, 0.45);
     transform: scale(1.025);
   }
+
+  &:active {
+    transform: scale(0.97);
+    background: rgba(123, 44, 191, 0.45);
+  }
 `;
 
 const BtnIcon = styled.span`
@@ -229,6 +235,11 @@ const SecondaryBtn = styled.button`
     border-color: ${props => props.$solo ? '#9d4edd' : 'rgba(255, 255, 255, 0.25)'};
     color: white;
     ${props => props.$solo && 'box-shadow: 0 0 36px rgba(123, 44, 191, 0.45); transform: scale(1.025);'}
+  }
+
+  &:active {
+    transform: scale(0.97);
+    opacity: 0.85;
   }
 `;
 

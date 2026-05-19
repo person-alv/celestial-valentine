@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 
 const LoveMeter = () => {
   const { loveMeter, currentLevel } = useSelector(state => state.shadowGarden);
@@ -19,30 +19,31 @@ const LoveMeter = () => {
           $percent={loveMeter}
           className="h-full bg-gradient-to-r from-sg-pink to-sg-rose transition-all duration-500 relative"
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          <Shimmer />
         </Fill>
         <div className="absolute inset-0 flex items-center justify-around pointer-events-none opacity-40">
           <span>❤️</span><span>💖</span><span>💕</span>
         </div>
       </BarContainer>
-
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .animate-shimmer {
-          animation: shimmer 2s linear infinite;
-        }
-      `}</style>
     </Container>
   );
 };
+
+const shimmerAnim = keyframes`
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+`;
 
 const Container = styled.div``;
 const BarContainer = styled.div``;
 const Fill = styled.div`
   width: ${props => props.$percent}%;
+`;
+const Shimmer = styled.div`
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: ${shimmerAnim} 2s linear infinite;
 `;
 
 export default LoveMeter;

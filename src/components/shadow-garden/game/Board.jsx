@@ -2,72 +2,115 @@ import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 import Tile from './Tile';
 
+const BOARD_SIZE = 8;
+const SWIPE_THRESHOLD = 20; // px — lower than before for snappier feel
+const MAX_DRAG_OFFSET = 52; // px — visual clamp so tile doesn't overshoot its neighbour
+
 const Board = ({
   board,
   selectedTile,
   isProcessing,
   onTileClick,
+  onTouchSwap,
   isSelectingRow = false,
   isSelectingType = false,
   specialEffects = [],
 }) => {
   const touchStart = useRef(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
+  const [hoveredRow, setHoveredRow]   = useState(null);
+  // { row, col, dx, dy } while finger is dragging; null otherwise
+  const [dragging, setDragging]       = useState(null);
 
   if (!board || board.length === 0) return null;
 
+  // ── Touch handlers ──────────────────────────────────────────────────────────
+
   const handleTouchStart = (e, row, col) => {
-    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, row, col };
-    onTileClick(row, col);
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    touchStart.current = { x: t.clientX, y: t.clientY, row, col };
+    setDragging({ row, col, dx: 0, dy: 0 });
+    if (navigator.vibrate) navigator.vibrate(8);
+  };
+
+  const handleBoardTouchMove = (e) => {
+    if (!touchStart.current) return;
+    const t = e.touches[0];
+    const rawDx = t.clientX - touchStart.current.x;
+    const rawDy = t.clientY - touchStart.current.y;
+    const dx = Math.max(-MAX_DRAG_OFFSET, Math.min(MAX_DRAG_OFFSET, rawDx));
+    const dy = Math.max(-MAX_DRAG_OFFSET, Math.min(MAX_DRAG_OFFSET, rawDy));
+    setDragging(prev => prev ? { ...prev, dx, dy } : null);
   };
 
   const handleTouchEnd = (e) => {
-    if (!touchStart.current || isProcessing) return;
-    const touchEnd = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-    const dx = touchEnd.x - touchStart.current.x;
-    const dy = touchEnd.y - touchStart.current.y;
-    const threshold = 30;
-    let targetRow = touchStart.current.row;
-    let targetCol = touchStart.current.col;
-    if (Math.abs(dx) > Math.abs(dy)) {
-      if (Math.abs(dx) > threshold) targetCol += dx > 0 ? 1 : -1;
-    } else {
-      if (Math.abs(dy) > threshold) targetRow += dy > 0 ? 1 : -1;
-    }
-    if (targetRow !== touchStart.current.row || targetCol !== touchStart.current.col) {
-      if (targetRow >= 0 && targetRow < 8 && targetCol >= 0 && targetCol < 8) {
-        onTileClick(targetRow, targetCol);
-      }
-    }
+    const start = touchStart.current;
     touchStart.current = null;
+    setDragging(null);
+
+    if (!start || isProcessing) return;
+
+    const te = e.changedTouches[0];
+    const dx = te.clientX - start.x;
+    const dy = te.clientY - start.y;
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+    const isSweep = absDx > SWIPE_THRESHOLD || absDy > SWIPE_THRESHOLD;
+
+    if (isSweep) {
+      let targetRow = start.row;
+      let targetCol = start.col;
+      if (absDx >= absDy) {
+        targetCol += dx > 0 ? 1 : -1;
+      } else {
+        targetRow += dy > 0 ? 1 : -1;
+      }
+      if (
+        targetRow >= 0 && targetRow < BOARD_SIZE &&
+        targetCol >= 0 && targetCol < BOARD_SIZE
+      ) {
+        onTouchSwap(start.row, start.col, targetRow, targetCol);
+      }
+    } else {
+      // Tap — classic two-tap selection (also handles power targeting modes)
+      onTileClick(start.row, start.col);
+    }
   };
+
+  // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
     <BoardContainer
       id="game-board"
       className="grid grid-cols-8 gap-1 p-2 bg-black/40 backdrop-blur-sm border-4 border-sg-purple/30 rounded-xl shadow-2xl touch-none relative"
       onMouseLeave={() => setHoveredRow(null)}
+      onTouchMove={handleBoardTouchMove}
     >
       {board.map((row, rowIndex) =>
-        row.map((tile, colIndex) => (
-          <div
-            key={`cell-${rowIndex}-${colIndex}`}
-            onTouchStart={(e) => handleTouchStart(e, rowIndex, colIndex)}
-            onTouchEnd={handleTouchEnd}
-            onMouseEnter={() => isSelectingRow && setHoveredRow(rowIndex)}
-          >
-            <Tile
-              tile={tile}
-              row={rowIndex}
-              col={colIndex}
-              isSelected={selectedTile?.row === rowIndex && selectedTile?.col === colIndex}
-              isProcessing={isProcessing}
-              onClick={onTileClick}
-              isRowHighlighted={isSelectingRow && hoveredRow === rowIndex}
-              isTypeTargeting={isSelectingType}
-            />
-          </div>
-        ))
+        row.map((tile, colIndex) => {
+          const isTileDragging = dragging?.row === rowIndex && dragging?.col === colIndex;
+          return (
+            <div
+              key={`cell-${rowIndex}-${colIndex}`}
+              onTouchStart={(e) => handleTouchStart(e, rowIndex, colIndex)}
+              onTouchEnd={handleTouchEnd}
+              onMouseEnter={() => isSelectingRow && setHoveredRow(rowIndex)}
+            >
+              <Tile
+                tile={tile}
+                row={rowIndex}
+                col={colIndex}
+                isSelected={selectedTile?.row === rowIndex && selectedTile?.col === colIndex}
+                isProcessing={isProcessing}
+                onClick={onTileClick}
+                isRowHighlighted={isSelectingRow && hoveredRow === rowIndex}
+                isTypeTargeting={isSelectingType}
+                isDragging={isTileDragging}
+                dragOffset={isTileDragging ? { dx: dragging.dx, dy: dragging.dy } : null}
+              />
+            </div>
+          );
+        })
       )}
 
       {/* Special tile detonation effects layer */}

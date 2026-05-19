@@ -252,7 +252,7 @@ const InvertedSpearCinema = ({ onComplete }) => {
       </SpearContainer>
       <CinemaLabel ref={textRef} $color="#00FF7F">
         INVERTED SPEAR OF HEAVEN
-        <CinemaInstruction>— CLICK A TILE TO SELECT ITS TYPE —</CinemaInstruction>
+        <CinemaInstruction>— TAP A TILE TO SELECT ITS TYPE —</CinemaInstruction>
       </CinemaLabel>
     </CinemaOverlay>
   );
@@ -456,7 +456,7 @@ const CinemaLabel = styled.div`
 const CinemaInstruction = styled.div`
   margin-top: 6px;
   font-family: monospace;
-  font-size: clamp(7px, 1vw, 10px);
+  font-size: clamp(9px, 1.2vw, 11px);
   color: rgba(255,255,255,0.55);
   letter-spacing: 0.15em;
   animation: pulse 1s ease-in-out infinite;
