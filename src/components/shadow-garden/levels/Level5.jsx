@@ -172,9 +172,8 @@ const NebulaGlow2 = styled.div`
   z-index: 1;
 `;
 
-const ContentWrapper = styled.div`
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-`;
+/* Layout now lives in ShadowGarden's GameLayout column (consistent across all levels);
+   this wrapper is just the positioned content layer above the cosmic background. */
+const ContentWrapper = styled.div``;
 
 export default Level5;

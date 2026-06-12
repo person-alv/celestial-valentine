@@ -142,8 +142,11 @@ const SpecialEffectItem = ({ effect }) => {
 };
 
 const BoardContainer = styled.div`
-  width: min(85vw, min(calc(100vh - 240px), 480px));
-  height: min(85vw, min(calc(100vh - 240px), 480px));
+  /* Square board. Width usually wins on portrait (92vw → roomier than the old 85vw);
+     the dvh term is the height ceiling so the board never grows into the in-flow power
+     dock / footer, and 100dvh keeps it correct under the mobile URL bar. 460px caps desktop. */
+  width: min(92vw, calc(100dvh - 250px), 460px);
+  height: min(92vw, calc(100dvh - 250px), 460px);
   user-select: none;
 `;
 

@@ -30,10 +30,21 @@ const Hub = () => {
   const lastTapTime = useRef({});
   const laptopRef = useRef(null);
   const [failedPosters, setFailedPosters] = useState(new Set());
+  const [isCompact, setIsCompact] = useState(false);
 
   useEffect(() => {
     soundManager.playBackground('/sounds/hub/hub_lofi.mp3', 0.2);
     return () => soundManager.stopBackground();
+  }, []);
+
+  // Track portrait/phone width so the laptop shows a phone-friendly, vertically
+  // stacked system UI instead of the 964×576 landscape canvas.
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsCompact(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
   }, []);
 
   // --- SMART CLICK / DOUBLE-TAP HANDLER ---
@@ -148,7 +159,7 @@ const Hub = () => {
   };
 
   return (
-    <Container className="bg-black overflow-hidden relative w-screen h-screen">
+    <Container className="bg-black overflow-hidden relative">
       {/* Close button for poster zoom — shown on mobile/touch where ESC isn't available */}
       {cameraView !== 'room' && cameraView !== 'laptop' && (
         <PosterCloseBtn
@@ -162,12 +173,12 @@ const Hub = () => {
         <BackgroundLayer className="absolute inset-0">
           
           {/* Interactive Window */}
-          <WindowArea className="absolute top-[8%] right-[12%] w-[22%] h-[38%] bg-[#010409] border-[8px] border-slate-900 rounded shadow-[0_0_50px_rgba(0,0,0,1)]">
+          <WindowArea className="bg-[#010409] border-[8px] border-slate-900 rounded shadow-[0_0_50px_rgba(0,0,0,1)]">
             <Constellations type={windowPattern} />
           </WindowArea>
 
           {/* Posters */}
-          <PosterArea className="absolute top-[15%] left-[8%] flex gap-12">
+          <PosterArea>
             {POSTERS.map(p => {
               const showImage = p.src && !failedPosters.has(p.id);
               return (
@@ -176,7 +187,7 @@ const Hub = () => {
                   ref={(el) => { posterRefs.current[p.id] = el; }}
                   onClick={() => handleInteraction(p.id, false)}
                   $isFocused={cameraView === p.id}
-                  className="w-32 h-48 cursor-pointer preserve-3d transition-all duration-500"
+                  className="cursor-pointer preserve-3d transition-all duration-500"
                 >
                   <div className="poster-inner w-full h-full p-1 bg-white/5 border border-white/10 rounded-sm flex flex-col items-center justify-between shadow-2xl">
                     <div className="w-full h-full bg-slate-900/50 flex flex-col items-center justify-center relative overflow-hidden">
@@ -206,14 +217,14 @@ const Hub = () => {
           </PosterArea>
 
           {/* Desk Area */}
-          <DeskGroup className="absolute bottom-[10%] left-[30%] -translate-x-1/2">
-            <DeskSurface className="w-[500px] h-4 bg-gradient-to-b from-[#1a120b] to-black rounded-full" />
-            
+          <DeskGroup>
+            <DeskSurface className="h-4 bg-gradient-to-b from-[#1a120b] to-black rounded-full" />
+
             {/* The Gateway Laptop */}
             <LaptopFrame
               ref={laptopRef}
               onClick={() => !systemActive && handleInteraction('laptop', true)}
-              className="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-40 bg-slate-800 rounded-t-xl cursor-pointer shadow-2xl"
+              className="bg-slate-800 rounded-t-xl cursor-pointer"
             >
               <div className="absolute top-2 left-1/2 -translate-x-1/2 w-[94%] h-[90%] bg-[#010409] rounded-sm overflow-hidden flex items-center justify-center border border-white/5">
                 
@@ -280,23 +291,132 @@ const Hub = () => {
 
         </BackgroundLayer>
       </BedroomWrapper>
+
+      {/* Mobile system UI — rendered OUTSIDE the GSAP-scaled bedroom so it can fill the
+          viewport. Fades in once the laptop zoom crosses the activation threshold, with
+          the two destiny cards reflowed into a vertical stack. */}
+      {isCompact && systemActive && (
+        <MobileSystemOverlay className="system-root">
+          <MobileSystemTitleBar>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <TrafficLight $color="#FF5F57" />
+              <TrafficLight $color="#FEBC2E" />
+              <TrafficLight $color="#28C840" />
+            </div>
+            <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '11px', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.25em' }}>
+              HUNTER_SYSTEM v2.0
+            </span>
+            <ScreenCloseBtn onClick={() => executeZoom('laptop')}>[ESC]</ScreenCloseBtn>
+          </MobileSystemTitleBar>
+
+          <MobileSystemBody>
+            <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '13px', color: '#c9a227', letterSpacing: '0.2em', marginBottom: '6px', opacity: 0.9, textAlign: 'center' }}>
+              DAILY QUEST: SELECT DESTINY
+            </div>
+            <div style={{ height: '1px', width: '160px', background: 'linear-gradient(to right, transparent, #c9a227, transparent)', marginBottom: '18px' }} />
+
+            <MobileCardStack>
+              <GameCard onClick={() => launchGame('/valentine')}>
+                <span style={{ fontSize: '48px', lineHeight: 1 }}>✨</span>
+                <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '16px', color: 'white', marginTop: '10px', letterSpacing: '0.1em' }}>STAR_MAP</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>Valentine</span>
+              </GameCard>
+
+              <GameCard $purple onClick={() => launchGame('/shadow-garden-welcome')}>
+                <span style={{ fontSize: '48px', lineHeight: 1 }}>🌑</span>
+                <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '16px', color: '#9d4edd', marginTop: '10px', letterSpacing: '0.1em' }}>SHADOW_GARDEN</span>
+                <span style={{ fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>Level-Up Quest</span>
+              </GameCard>
+            </MobileCardStack>
+
+            <div style={{ marginTop: '16px', fontSize: '11px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.18)', textTransform: 'uppercase' }}>
+              [ FAITH_LVL: S-RANK ]
+            </div>
+          </MobileSystemBody>
+        </MobileSystemOverlay>
+      )}
     </Container>
   );
 };
 
 // --- STYLED COMPONENTS ---
 
-const Container = styled.div``;
+const Container = styled.div`
+  width: 100vw;
+  height: 100vh;   /* fallback */
+  height: 100dvh;  /* fill the visible screen on mobile (no URL-bar gap) */
+`;
 const BedroomWrapper = styled.div` will-change: transform; transition: filter 0.5s ease; `;
 const BackgroundLayer = styled.div` background: radial-gradient(circle at 30% 50%, #1e293b 0%, #020617 100%); `;
-const WindowArea = styled.div``;
-const PosterArea = styled.div``;
-const DeskGroup = styled.div``;
-const DeskSurface = styled.div``;
+
+/* Desktop values preserved exactly; portrait re-composes the diorama with fluid
+   vmin/clamp sizes + aspect-ratio so each element keeps its shape (no warping)
+   and the whole bedroom fills a portrait phone. */
+const WindowArea = styled.div`
+  position: absolute;
+  top: 8%;
+  right: 12%;
+  width: 22%;
+  height: 38%;
+  @media (max-width: 768px) {
+    top: 6%;
+    right: 5%;
+    width: min(32vw, 150px);
+    height: auto;
+    aspect-ratio: 3 / 4;
+  }
+`;
+const PosterArea = styled.div`
+  position: absolute;
+  top: 15%;
+  left: 8%;
+  display: flex;
+  gap: 48px;
+  @media (max-width: 768px) {
+    top: 13%;
+    left: 5%;
+    gap: 2vw;
+  }
+`;
+const DeskGroup = styled.div`
+  position: absolute;
+  bottom: 10%;
+  left: 30%;
+  transform: translateX(-50%);
+  @media (max-width: 768px) {
+    bottom: 15%;
+    left: 50%;
+  }
+`;
+const DeskSurface = styled.div`
+  width: 500px;
+  @media (max-width: 768px) {
+    width: min(86vw, 460px);
+  }
+`;
+
+const laptopGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 18px 2px rgba(123, 44, 191, 0.45), 0 8px 24px rgba(0,0,0,0.6); }
+  50%      { box-shadow: 0 0 36px 8px rgba(123, 44, 191, 0.85), 0 8px 24px rgba(0,0,0,0.6); }
+`;
 
 const LaptopFrame = styled.div`
+  position: absolute;
+  top: -96px;            /* -top-24: sits above the desk surface */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 256px;
+  height: 160px;
   perspective: 1000px;
+  animation: ${laptopGlow} 2.4s ease-in-out infinite;  /* glow = "tap me" affordance */
   &:hover { background: #334155; }
+  @media (max-width: 768px) {
+    top: auto;
+    bottom: 0;           /* rest the laptop on the desk in portrait */
+    width: min(54vw, 240px);
+    height: auto;
+    aspect-ratio: 8 / 5;
+  }
 `;
 
 const SystemContainer = styled.div`
@@ -322,6 +442,13 @@ const SystemGlitch = styled.div`
 `;
 
 const Poster = styled.div`
+  width: 128px;   /* w-32 */
+  height: 192px;  /* h-48 */
+  @media (max-width: 768px) {
+    width: min(17vw, 84px);
+    height: auto;
+    aspect-ratio: 2 / 3;
+  }
   ${props => props.$isFocused && css`
     z-index: 100;
     filter: drop-shadow(0 0 30px rgba(123, 44, 191, 0.5));
@@ -416,6 +543,51 @@ const GameCard = styled.div`
     border-color: ${props => props.$purple ? '#9d4edd' : '#ffd700'};
     box-shadow: 0 0 40px ${props => props.$purple ? 'rgba(123, 44, 191, 0.25)' : 'rgba(255, 215, 0, 0.2)'};
   }
+`;
+
+// --- MOBILE LAPTOP SYSTEM UI (portrait, vertically stacked) ---
+
+const fadeInOverlay = keyframes`from { opacity: 0; } to { opacity: 1; }`;
+
+const MobileSystemOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at center, #0f172a 0%, #010409 100%);
+  animation: ${fadeInOverlay} 0.45s ease forwards;
+`;
+
+const MobileSystemTitleBar = styled.div`
+  flex-shrink: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  padding-top: env(safe-area-inset-top);
+  box-sizing: content-box;
+  background: rgba(5, 10, 20, 0.97);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+`;
+
+const MobileSystemBody = styled.div`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 22px calc(24px + env(safe-area-inset-bottom));
+`;
+
+const MobileCardStack = styled.div`
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const PosterCloseBtn = styled.button`

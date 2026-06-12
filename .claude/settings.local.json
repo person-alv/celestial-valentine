@@ -14,7 +14,9 @@
       "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\utils\\\\match3\")",
       "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\components\\\\shadow-garden\\\\tutorial\")",
       "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\hooks\")",
-      "PowerShell(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\public\" -Recurse | Select-Object FullName | Where-Object { $_.FullName -match \"README|dolls\" })"
+      "PowerShell(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\public\" -Recurse | Select-Object FullName | Where-Object { $_.FullName -match \"README|dolls\" })",
+      "Bash(dir /s /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\")",
+      "Bash(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine/\")"
     ],
     "deny": [],
     "ask": []

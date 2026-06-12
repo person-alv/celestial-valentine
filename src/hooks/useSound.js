@@ -8,6 +8,7 @@ export const useSound = () => {
   const backgroundMusic = useRef(null);
   const sfxRegistry = useRef({});
   const stopTimerRef = useRef(null);
+  const pendingUnlockRef = useRef(null); // cleanup fn for an armed first-gesture retry
 
   useEffect(() => {
     Howler.volume(1.0);
@@ -24,6 +25,7 @@ export const useSound = () => {
   // Short fade (150ms) — fast enough to not bleed into the next route's audio.
   useEffect(() => {
     return () => {
+      if (pendingUnlockRef.current) pendingUnlockRef.current();
       if (backgroundMusic.current) {
         const howl = backgroundMusic.current;
         if (stopTimerRef.current) clearTimeout(stopTimerRef.current);
@@ -31,6 +33,31 @@ export const useSound = () => {
         stopTimerRef.current = setTimeout(() => howl.stop(), 170);
       }
     };
+  }, []);
+
+  // Mobile autoplay policy rejects play() that isn't inside a user gesture (mount effects).
+  // When that happens Howler fires 'playerror'; we arm a one-time first-gesture listener
+  // that resumes the audio context and replays the track. No-ops on desktop (no playerror).
+  const armUnlockRetry = useCallback((howl) => {
+    // Never stack listeners across repeated failures.
+    if (pendingUnlockRef.current) {
+      pendingUnlockRef.current();
+      pendingUnlockRef.current = null;
+    }
+    const events = ['pointerdown', 'touchend', 'click', 'keydown'];
+    const cleanup = () => {
+      events.forEach(evt => document.removeEventListener(evt, onGesture, true));
+      pendingUnlockRef.current = null;
+    };
+    const onGesture = () => {
+      cleanup();
+      try {
+        if (Howler.ctx && Howler.ctx.state === 'suspended') Howler.ctx.resume();
+      } catch (e) { /* no-op */ }
+      if (howl && !howl.playing()) howl.play();
+    };
+    events.forEach(evt => document.addEventListener(evt, onGesture, true));
+    pendingUnlockRef.current = cleanup;
   }, []);
 
   // instant=true: old track stops immediately, new track starts at full volume right away.
@@ -72,18 +99,24 @@ export const useSound = () => {
         setTimeout(() => old.stop(), 820);
       }
 
-      const newHowl = new Howl({ src: [src], loop, volume: instant ? targetVol : 0, html5: true });
+      const newHowl = new Howl({
+        src: [src], loop, volume: instant ? targetVol : 0, html5: true,
+        onplayerror: () => armUnlockRetry(newHowl),
+      });
       backgroundMusic.current = newHowl;
       newHowl.play();
       if (!instant) newHowl.fade(0, targetVol, 800);
     } else {
       // Fresh start — no existing track. Start at target volume directly so autoplay
       // policy can't leave us stuck at silent volume on first load or after navigation.
-      const newHowl = new Howl({ src: [src], loop, volume: targetVol, html5: true });
+      const newHowl = new Howl({
+        src: [src], loop, volume: targetVol, html5: true,
+        onplayerror: () => armUnlockRetry(newHowl),
+      });
       backgroundMusic.current = newHowl;
       newHowl.play();
     }
-  }, [musicMuted]);
+  }, [musicMuted, armUnlockRetry]);
 
   const stopBackground = useCallback(() => {
     if (backgroundMusic.current) {
@@ -146,6 +179,7 @@ class SoundManager {
   constructor() {
     this.bg = null;
     this.sfx = {};
+    this._pendingUnlock = null;
   }
 
   playBackground(src, volume = 0.3) {
@@ -155,9 +189,32 @@ class SoundManager {
       old.fade(vol, 0, 500);
       setTimeout(() => old.stop(), 520);
     }
-    this.bg = new Howl({ src: [src], loop: true, volume: 0, html5: true });
-    this.bg.play();
-    this.bg.fade(0, volume, 800);
+    const bg = new Howl({
+      src: [src], loop: true, volume: 0, html5: true,
+      onplayerror: () => this._armUnlock(bg),
+    });
+    this.bg = bg;
+    bg.play();
+    bg.fade(0, volume, 800);
+  }
+
+  // Mobile autoplay: if play() was blocked, replay on the first user gesture.
+  _armUnlock(howl) {
+    if (this._pendingUnlock) this._pendingUnlock();
+    const events = ['pointerdown', 'touchend', 'click', 'keydown'];
+    const cleanup = () => {
+      events.forEach(evt => document.removeEventListener(evt, onGesture, true));
+      this._pendingUnlock = null;
+    };
+    const onGesture = () => {
+      cleanup();
+      try {
+        if (Howler.ctx && Howler.ctx.state === 'suspended') Howler.ctx.resume();
+      } catch (e) { /* no-op */ }
+      if (howl && !howl.playing()) howl.play();
+    };
+    events.forEach(evt => document.addEventListener(evt, onGesture, true));
+    this._pendingUnlock = cleanup;
   }
 
   stopBackground() {

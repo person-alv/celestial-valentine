@@ -7,6 +7,23 @@ import { useSound } from '../hooks/useSound';
 import { loveNotes } from '../data/shadow-garden/loveNotes';
 import { rekindleJourney } from '../store/slices/shadowGardenSlice';
 
+/**
+ * Section header that doubles as a collapsible toggle on mobile.
+ * Panels are multi-open: each header toggles its own panel independently.
+ * On md+ it reverts to a static centered title (non-interactive, no chevron),
+ * so the desktop three-panel layout is unchanged.
+ */
+const AccordionHeader = ({ id, title, openPanels, togglePanel, className = '' }) => (
+  <button
+    type="button"
+    onClick={() => togglePanel(id)}
+    className={`w-full md:w-auto flex items-center justify-between md:justify-center gap-2 md:pointer-events-none md:cursor-default font-orbitron text-sg-gold text-xs tracking-widest ${className}`}
+  >
+    <span>{title}</span>
+    <span className={`md:hidden text-sg-gold/70 text-base leading-none transition-transform duration-300 ${openPanels.includes(id) ? 'rotate-90' : ''}`}>▸</span>
+  </button>
+);
+
 const MusicRoom = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -17,6 +34,10 @@ const MusicRoom = () => {
   const [showNote, setShowNote] = useState(null);
   const [showConfirmRestart, setShowConfirmRestart] = useState(false);
   const [activeDoll, setActiveDoll] = useState(null);
+  // Mobile collapsible panels — multi-open; Collection leads. (Inert on md+.)
+  const [openPanels, setOpenPanels] = useState(['collection']);
+  const togglePanel = (id) =>
+    setOpenPanels(prev => (prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]));
 
   const voiceNotes = [
     { id: 1, title: "Our First Hello", date: "Feb 2024" },
@@ -135,8 +156,38 @@ const MusicRoom = () => {
     }, 300);
   };
 
+  // One shelf row of dolls — shared by the mobile (3 per shelf) and desktop (5+4) blocks.
+  const renderShelf = (dollList) => (
+    <div className="w-full flex items-end justify-center gap-0 relative pb-5">
+      <Shelf className="absolute bottom-0 w-[90%] h-4 bg-gradient-to-b from-[#3d2b1f] to-[#1a120d] rounded-sm shadow-2xl" />
+      {dollList.map(doll => (
+        <DollWrapper
+          key={doll.id}
+          className="group relative flex-1 flex justify-center"
+          onClick={() => {
+            setActiveDoll(doll);
+            playSFX('sparkle', '/sounds/sparkle.mp3');
+          }}
+        >
+          <Doll className="text-8xl cursor-pointer transition-all duration-500 group-hover:-translate-y-8 group-hover:scale-125 drop-shadow-xl">
+            {failedDolls.has(doll.id)
+              ? doll.emoji
+              : <img
+                  src={doll.src}
+                  alt={doll.name}
+                  onError={() => handleDollImgError(doll.id)}
+                  draggable={false}
+                  style={{ width: '1em', height: '1em', objectFit: 'contain' }}
+                />
+            }
+          </Doll>
+        </DollWrapper>
+      ))}
+    </div>
+  );
+
   return (
-    <Container className="w-screen min-h-screen md:h-screen bg-[#0a0a12] relative overflow-y-auto md:overflow-hidden flex flex-col items-center md:justify-center justify-start">
+    <Container className="w-screen h-[100dvh] md:h-screen bg-[#0a0a12] relative overflow-y-auto md:overflow-hidden flex flex-col items-center md:justify-center justify-start">
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] opacity-90" />
       
       <Stars className="absolute inset-0">
@@ -151,16 +202,16 @@ const MusicRoom = () => {
 
       <Header className="relative z-10 mb-4 text-center">
         <h1 className="font-dancing text-4xl md:text-6xl text-sg-pink drop-shadow-[0_0_15px_rgba(255,182,193,0.5)]">The Heart Domain</h1>
-        <p className="font-orbitron text-[10px] text-white/40 tracking-[0.5rem] uppercase mt-2">Faith & Alvin's Sanctuary</p>
+        <p className="font-orbitron text-[10px] text-white/40 tracking-[0.3rem] md:tracking-[0.5rem] uppercase mt-2">Faith & Alvin's Sanctuary</p>
       </Header>
 
       <MainContent className="relative z-10 w-full max-w-7xl flex flex-col md:flex-row md:h-[75vh] gap-4 md:gap-6 p-3 md:p-4">
         
         {/* Left: Vinyl Player & Notes */}
-        <Section className="flex-1 min-h-[300px] md:min-h-0 glass-card p-4 md:p-6 flex flex-col items-center gap-4">
-          <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest mb-4">ARCHIVE</SectionTitle>
-          
-          <div className="w-full flex-1 flex flex-col gap-4 overflow-y-auto hide-scrollbar">
+        <Section className="order-3 md:order-1 flex-none md:flex-1 md:min-h-0 glass-card p-4 md:p-6 flex flex-col items-center gap-4">
+          <AccordionHeader id="archive" title="ARCHIVE" openPanels={openPanels} togglePanel={togglePanel} className="mb-2 md:mb-4" />
+
+          <div className={`w-full flex-1 ${openPanels.includes('archive') ? 'flex' : 'hidden'} md:flex flex-col gap-4 overflow-y-auto max-h-[60vh] md:max-h-none hide-scrollbar`}>
             <h4 className="font-orbitron text-[10px] text-white/40 border-b border-white/10 pb-1">VOICE NOTES</h4>
             {voiceNotes.map(note => (
               <VinylRow 
@@ -197,75 +248,32 @@ const MusicRoom = () => {
         </Section>
 
         {/* Center: Doll Display */}
-        <Section className="flex-[1.5] min-h-[320px] md:min-h-0 glass-card px-3 py-4 md:py-6 flex flex-col items-center justify-between relative">
-          <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest">HUNTER'S COLLECTION</SectionTitle>
+        <Section className="order-1 md:order-2 flex-none md:flex-[1.5] md:min-h-0 glass-card px-3 py-4 md:py-6 flex flex-col items-center justify-between relative">
+          <AccordionHeader id="collection" title="HUNTER'S COLLECTION" openPanels={openPanels} togglePanel={togglePanel} className="mb-2 md:mb-0" />
 
-          <div className="flex-1 w-full flex flex-col justify-around py-2 gap-2">
-            {/* Shelf row 1 — dolls 1–5 */}
-            <div className="w-full flex items-end justify-center gap-0 relative pb-5">
-              <Shelf className="absolute bottom-0 w-[90%] h-4 bg-gradient-to-b from-[#3d2b1f] to-[#1a120d] rounded-sm shadow-2xl" />
-              {dolls.slice(0, 5).map(doll => (
-                <DollWrapper
-                  key={doll.id}
-                  className="group relative flex-1 flex justify-center"
-                  onClick={() => {
-                    setActiveDoll(doll);
-                    playSFX('sparkle', '/sounds/sparkle.mp3');
-                  }}
-                >
-                  <Doll className="text-8xl cursor-pointer transition-all duration-500 group-hover:-translate-y-8 group-hover:scale-125 drop-shadow-xl">
-                    {failedDolls.has(doll.id)
-                      ? doll.emoji
-                      : <img
-                          src={doll.src}
-                          alt={doll.name}
-                          onError={() => handleDollImgError(doll.id)}
-                          draggable={false}
-                          style={{ width: '1em', height: '1em', objectFit: 'contain' }}
-                        />
-                    }
-                  </Doll>
-                </DollWrapper>
-              ))}
+          <div className={`flex-1 w-full ${openPanels.includes('collection') ? 'flex' : 'hidden'} md:flex flex-col justify-around py-2 gap-2`}>
+            {/* Mobile: 3 shelves of 3 */}
+            <div className="md:hidden flex flex-col justify-around gap-3 flex-1">
+              {renderShelf(dolls.slice(0, 3))}
+              {renderShelf(dolls.slice(3, 6))}
+              {renderShelf(dolls.slice(6, 9))}
             </div>
-            {/* Shelf row 2 — dolls 6–9 */}
-            <div className="w-full flex items-end justify-center gap-0 relative pb-5">
-              <Shelf className="absolute bottom-0 w-[90%] h-4 bg-gradient-to-b from-[#3d2b1f] to-[#1a120d] rounded-sm shadow-2xl" />
-              {dolls.slice(5).map(doll => (
-                <DollWrapper
-                  key={doll.id}
-                  className="group relative flex-1 flex justify-center"
-                  onClick={() => {
-                    setActiveDoll(doll);
-                    playSFX('sparkle', '/sounds/sparkle.mp3');
-                  }}
-                >
-                  <Doll className="text-8xl cursor-pointer transition-all duration-500 group-hover:-translate-y-8 group-hover:scale-125 drop-shadow-xl">
-                    {failedDolls.has(doll.id)
-                      ? doll.emoji
-                      : <img
-                          src={doll.src}
-                          alt={doll.name}
-                          onError={() => handleDollImgError(doll.id)}
-                          draggable={false}
-                          style={{ width: '1em', height: '1em', objectFit: 'contain' }}
-                        />
-                    }
-                  </Doll>
-                </DollWrapper>
-              ))}
+            {/* Desktop: 5 + 4 */}
+            <div className="hidden md:flex flex-col justify-around gap-2 flex-1 w-full">
+              {renderShelf(dolls.slice(0, 5))}
+              {renderShelf(dolls.slice(5))}
             </div>
           </div>
 
-          <div className="w-full bg-black/40 p-4 rounded-xl border border-white/5 text-center">
+          <div className={`w-full bg-black/40 p-4 rounded-xl border border-white/5 text-center ${openPanels.includes('collection') ? 'block' : 'hidden'} md:block`}>
             <p className="font-dancing text-xl text-white/80">"Every shadow defeated, every memory cherished..."</p>
           </div>
         </Section>
 
         {/* Right: Gallery Wall */}
-        <Section className="flex-1 min-h-[400px] md:min-h-0 glass-card p-4 md:p-6 flex flex-col items-center">
-          <SectionTitle className="font-orbitron text-sg-gold text-xs tracking-widest mb-4">PHOTO GALLERY</SectionTitle>
-          <div className="grid grid-cols-2 gap-3 w-full overflow-y-auto hide-scrollbar">
+        <Section className="order-2 md:order-3 flex-none md:flex-1 md:min-h-0 glass-card p-4 md:p-6 flex flex-col items-center">
+          <AccordionHeader id="gallery" title="PHOTO GALLERY" openPanels={openPanels} togglePanel={togglePanel} className="mb-2 md:mb-4" />
+          <div className={`${openPanels.includes('gallery') ? 'grid' : 'hidden'} md:grid grid-cols-1 md:grid-cols-2 gap-3 w-full overflow-y-auto max-h-[60vh] md:max-h-none hide-scrollbar`}>
             {photos.map(photo => (
               <PhotoFrame
                 key={photo.id}
@@ -294,14 +302,14 @@ const MusicRoom = () => {
         </Section>
       </MainContent>
 
-      <Footer className="relative z-10 mt-4 flex gap-4 items-center">
+      <Footer className="relative z-10 mt-4 mb-4 md:mb-0 flex flex-wrap gap-4 items-center justify-center px-4">
         <button onClick={() => navigate('/')} className="btn-system text-[10px] bg-sg-midnight hover:bg-sg-purple border border-sg-purple">
           RETURN TO HUB
         </button>
         <button onClick={handlePlayAgain} className="btn-system text-[10px] bg-sg-gold/20 hover:bg-sg-gold/40 border border-sg-gold text-sg-gold">
           ⚔️ PLAY AGAIN
         </button>
-        <div className="text-[8px] font-mono text-white/20 italic">
+        <div className="w-full md:w-auto text-center text-[8px] font-mono text-white/20 italic">
           "Every ending is a new beginning..."
         </div>
       </Footer>
@@ -428,7 +436,6 @@ const MusicRoom = () => {
 
 const Container = styled.div``;
 const Section = styled.div` background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; `;
-const SectionTitle = styled.h3``;
 const Header = styled.header``;
 const MainContent = styled.main``;
 const Footer = styled.footer``;

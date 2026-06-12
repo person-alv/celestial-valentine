@@ -203,17 +203,18 @@ const ShadowGarden = () => {
   const LevelWrapper = LEVEL_WRAPPERS[currentLevel - 1] || Level1;
 
   return (
-    <GameGrid className="w-screen h-screen bg-black relative overflow-hidden">
+    <GameGrid className="bg-black relative overflow-hidden">
       <LevelWrapper>
+        <GameLayout>
 
         {/* ── TOP: Boss Bar + Love Meter (L5 only) ── */}
-        <HeaderZone className={`z-10 flex flex-col items-center justify-center ${currentLevel === 5 ? 'py-1 px-4' : 'p-4'} gap-2`}>
+        <HeaderZone className={`z-10 flex flex-col items-center justify-center ${currentLevel === 5 ? 'py-1 px-4' : 'p-2 lg:p-4'} gap-1 lg:gap-2 flex-shrink-0`}>
           <BossBar />
           <LoveMeter />
         </HeaderZone>
 
         {/* ── CENTER: Board + Side Panels ── */}
-        <BoardZone className="z-10 relative flex items-center justify-center gap-8 px-4">
+        <BoardZone className="z-10 relative flex flex-1 min-h-0 items-center justify-center gap-8 px-4">
 
           {/* LEFT panel */}
           <SidePanel className="hidden lg:flex flex-col gap-4 items-center">
@@ -226,6 +227,10 @@ const ShadowGarden = () => {
           <div className="flex flex-col items-center gap-3">
             {/* Score + Timer */}
             <div className="flex items-center gap-4">
+              {/* Mobile-only reactive avatar (desktop keeps it in the left side panel) */}
+              <div className="lg:hidden flex-shrink-0">
+                <FaithAvatar compact comboCount={comboCount} isProcessing={isProcessing} />
+              </div>
               <StatCard label="SCORE" value={stats.totalScore} />
               <StatCard label="TIME"  value={timeLeft}        isTime />
               {multiplierSecsLeft > 0 && (
@@ -282,8 +287,24 @@ const ShadowGarden = () => {
           </SidePanel>
         </BoardZone>
 
+        {/* ── MOBILE POWER BAR (in-flow row, hidden on lg+) ── */}
+        <MobilePowerBar className="lg:hidden z-20 flex-shrink-0">
+          <div className="flex items-center gap-3 px-3 py-1.5">
+            <div className="flex-1 min-w-0">
+              <PowerUpBar
+                onActivate={handlePowerActivation}
+                isFreeSwapActive={isFreeSwapActive}
+                compact
+              />
+            </div>
+            <div className="flex-shrink-0">
+              <MysteryBox onAlvinBlessing={handleAlvinBlessing} compact />
+            </div>
+          </div>
+        </MobilePowerBar>
+
         {/* ── FOOTER ── */}
-        <FooterZone className="z-10 flex items-center justify-between px-4 py-3 border-t border-white/10 bg-black/40 backdrop-blur-md">
+        <FooterZone className="z-10 flex items-center justify-between px-4 py-2 lg:py-3 border-t border-white/10 bg-black/40 backdrop-blur-md flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="text-[10px] font-mono text-white/40 tracking-widest uppercase">
               REALM {currentLevel}: {levelConfig.name}
@@ -311,29 +332,14 @@ const ShadowGarden = () => {
             </button>
           </div>
         </FooterZone>
+        </GameLayout>
 
-        {/* ── OVERLAYS ── */}
+        {/* ── OVERLAYS (fixed/absolute — layout-independent) ── */}
 
         {/* Domain Expansion — Level 5 victory cinematic */}
         {isDomainExpansionActive && (
           <DomainExpansion onComplete={handleDomainComplete} onAudioStart={handleDomainAudioStart} />
         )}
-
-        {/* ── MOBILE POWER BAR (hidden on lg+) ── */}
-        <MobilePowerBar className="lg:hidden absolute bottom-[52px] left-0 right-0 z-20">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="flex-1">
-              <PowerUpBar
-                onActivate={handlePowerActivation}
-                isFreeSwapActive={isFreeSwapActive}
-                compact
-              />
-            </div>
-            <div className="flex-shrink-0">
-              <MysteryBox onAlvinBlessing={handleAlvinBlessing} compact />
-            </div>
-          </div>
-        </MobilePowerBar>
 
         {/* Tutorial */}
         {!tutorialCompleted && <TutorialOverlay />}
@@ -369,7 +375,23 @@ const ShadowGarden = () => {
 };
 
 /* ── Styled components ── */
-const GameGrid    = styled.div`display: grid; grid-template-rows: auto 1fr auto;`;
+const GameGrid    = styled.div`
+  width: 100vw;
+  height: 100vh;   /* fallback for browsers without dvh */
+  height: 100dvh;  /* mobile: excludes the collapsing URL bar so nothing is clipped */
+  overflow: hidden;
+`;
+const GameLayout  = styled.div`
+  /* Single consistent in-game layout column across all 5 levels:
+     header (auto) → board (flex-1) → mobile power dock (auto) → footer (auto).
+     The themed Level wrapper sits behind this as a pure background. */
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+`;
 const HeaderZone  = styled.header``;
 const BoardZone   = styled.main``;
 const FooterZone  = styled.footer``;

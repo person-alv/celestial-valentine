@@ -6,7 +6,7 @@ const EXPRESSION_EMOJIS = {
   idle: '👩‍🎨', happy: '😊', excited: '🤩', thinking: '🧐', determined: '💪',
 };
 
-const FaithAvatar = ({ comboCount, isProcessing }) => {
+const FaithAvatar = ({ comboCount, isProcessing, compact = false }) => {
   const { currentBossHealth, maxBossHealth } = useSelector(state => state.shadowGarden);
 
   const expressionKey = useMemo(() => {
@@ -34,7 +34,9 @@ const FaithAvatar = ({ comboCount, isProcessing }) => {
     <div className="flex flex-col items-center">
       <AvatarContainer
         $auraColor={getAuraColor()}
-        className="w-24 h-24 rounded-full bg-sg-midnight border-4 border-sg-rose flex items-center justify-center text-5xl relative transition-all duration-300"
+        $compact={compact}
+        style={compact ? { width: 'clamp(56px, 10dvh, 92px)', height: 'clamp(56px, 10dvh, 92px)' } : undefined}
+        className={`${compact ? 'border-2 text-3xl' : 'w-24 h-24 border-4 text-5xl'} rounded-full bg-sg-midnight border-sg-rose flex items-center justify-center relative transition-all duration-300`}
       >
         {!imgFailed
           ? <img
@@ -48,16 +50,23 @@ const FaithAvatar = ({ comboCount, isProcessing }) => {
         }
 
         {comboCount >= 3 && (
-          <div className="absolute -top-4 -right-2 animate-bounce">💖</div>
+          <div className={`absolute animate-bounce ${compact ? '-top-2 -right-1 text-xs' : '-top-4 -right-2'}`}>💖</div>
         )}
       </AvatarContainer>
-      <span className="font-orbitron text-xs text-sg-pink mt-2 tracking-tighter">HUNTER FAITH</span>
+      <span className={`font-orbitron text-sg-pink tracking-tighter ${compact ? 'text-[8px] mt-0.5' : 'text-xs mt-2'}`}>
+        {compact ? 'FAITH' : 'HUNTER FAITH'}
+      </span>
     </div>
   );
 };
 
 const AvatarContainer = styled.div`
-  box-shadow: 0 0 20px ${props => props.$auraColor};
+  box-shadow: ${props =>
+    props.$auraColor !== 'transparent'
+      ? `0 0 20px ${props.$auraColor}`
+      : props.$compact
+      ? '0 0 10px rgba(255, 182, 193, 0.55)'  /* slight idle glow in the mobile stat row */
+      : 'none'};
   animation: ${props => props.$auraColor !== 'transparent' ? 'pulse 1s infinite' : 'none'};
 
   @keyframes pulse {

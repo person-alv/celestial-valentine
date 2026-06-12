@@ -11,13 +11,15 @@ const PowerUpBar = ({ onActivate, isFreeSwapActive, vertical = false, compact = 
   const containerLayout = vertical
     ? 'flex-col gap-2 p-3'
     : compact
-    ? 'flex-row gap-1 p-1.5'
+    ? 'flex-row gap-1 p-1.5 w-full'
     : 'flex-row gap-3 p-4';
 
+  // compact = mobile dock: tiles fluid-fill the row (square), so all 7 powers stay
+  // clearly identifiable and never overflow — from ~38px on 375px up to 46px on 430px.
   const tileSize = vertical
     ? 'w-10 h-10 rounded-lg'
     : compact
-    ? 'w-9 h-9 rounded-lg'
+    ? 'flex-1 aspect-square min-w-0 max-w-[46px] rounded-lg'
     : 'w-14 h-14 rounded-full';
 
   return (
