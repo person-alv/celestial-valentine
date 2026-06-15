@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
 import gsap from 'gsap';
@@ -17,7 +17,12 @@ const POSTERS = [
 const Hub = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
+  // Show the gold "NEW" badge on the Shadow Garden card until Faith has engaged with it.
+  // hasCompletedGame keeps it hidden even after a "Rekindle Journey" reset (which zeroes totalScore).
+  const { stats, completedLevels, hasCompletedGame } = useSelector(s => s.shadowGarden);
+  const shadowGardenIsNew = !(stats.totalScore > 0 || completedLevels.length > 0 || hasCompletedGame);
+
   // Unified Camera View State
   const [cameraView, setCameraView] = useState('room'); // 'room', 'laptop', 'gojo', 'solo', 'given'
   const [windowPattern, setWindowPattern] = useState('random');
@@ -266,6 +271,7 @@ const Hub = () => {
                             </GameCard>
 
                             <GameCard $purple onClick={(e) => { e.stopPropagation(); launchGame('/shadow-garden-welcome'); }}>
+                               {shadowGardenIsNew && <NewBadge><NewBadgeText>NEW</NewBadgeText><NewBadgeSheen /></NewBadge>}
                                <span style={{ fontSize: '64px', lineHeight: 1 }}>🌑</span>
                                <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '18px', color: '#9d4edd', marginTop: '16px', letterSpacing: '0.1em' }}>SHADOW_GARDEN</span>
                                <span style={{ fontFamily: 'monospace', fontSize: '13px', color: 'rgba(255,255,255,0.3)', marginTop: '6px' }}>Level-Up Quest</span>
@@ -323,6 +329,7 @@ const Hub = () => {
               </GameCard>
 
               <GameCard $purple onClick={() => launchGame('/shadow-garden-welcome')}>
+                {shadowGardenIsNew && <NewBadge $compact><NewBadgeText $compact>NEW</NewBadgeText><NewBadgeSheen /></NewBadge>}
                 <span style={{ fontSize: '48px', lineHeight: 1 }}>🌑</span>
                 <span style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '16px', color: '#9d4edd', marginTop: '10px', letterSpacing: '0.1em' }}>SHADOW_GARDEN</span>
                 <span style={{ fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>Level-Up Quest</span>
@@ -526,8 +533,63 @@ const DesktopContent = styled.div`
   min-height: 0;
 `;
 
+const badgeSheen = keyframes`
+  0%        { transform: translateX(-160%) skewX(-18deg); opacity: 0; }
+  12%       { opacity: 0.85; }
+  45%, 100% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+`;
+
+const badgeGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.30); }
+  50%      { box-shadow: 0 0 11px rgba(255, 215, 0, 0.55); }
+`;
+
+// Subtle gold "NEW" tag for the Shadow Garden card — sweeping sheen + soft glow.
+// Solid-fill text (NOT background-clip) stays crisp when the desktop laptop canvas is
+// GSAP-scaled up 4×; a background-clipped gradient would rasterize at the 0.25 base scale
+// and blur on upscale. The sheen overlay is a soft gradient, so upscaling never hurts it.
+// pointer-events:none so it never intercepts the card's launch click.
+const NewBadge = styled.div`
+  position: absolute;
+  top: ${props => props.$compact ? '6px' : '8px'};
+  right: ${props => props.$compact ? '6px' : '8px'};
+  padding: ${props => props.$compact ? '2px 6px' : '3px 9px'};
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  background: rgba(255, 215, 0, 0.07);
+  overflow: hidden;
+  pointer-events: none;
+  animation: ${badgeGlow} 2.6s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+`;
+
+const NewBadgeText = styled.span`
+  position: relative;
+  z-index: 1;
+  font-family: 'Orbitron', sans-serif;
+  font-size: ${props => props.$compact ? '8px' : '11px'};
+  letter-spacing: 0.18em;
+  line-height: 1;
+  color: #FFD700;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.45);
+`;
+
+const NewBadgeSheen = styled.span`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  z-index: 2;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.85) 50%, transparent 100%);
+  transform: translateX(-160%) skewX(-18deg);
+  animation: ${badgeSheen} 3.4s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) { display: none; }
+`;
+
 const GameCard = styled.div`
   flex: 1;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;

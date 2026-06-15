@@ -44,6 +44,8 @@ export const loadStateFromStorage = () => {
         isDomainExpansionActive: false,
         scoreMultiplier: 1,
         scoreMultiplierExpiresAt: 0,
+        // Migration default for saves created before power intros existed
+        seenPowerIntros: shadowGarden.seenPowerIntros ?? [],
       } : undefined,
       valentine: valentineState ? JSON.parse(valentineState) : undefined
     };

@@ -24,6 +24,7 @@ const initialState = {
   viewedLoveNotes: [],
   musicRoomUnlocked: false,
   tutorialCompleted: false,
+  seenPowerIntros: [],
   isPlaying: false,
   hasCompletedGame: false,
   musicMuted: false,
@@ -122,6 +123,12 @@ const shadowGardenSlice = createSlice({
     setTutorialCompleted: (state, action) => {
       state.tutorialCompleted = action.payload;
     },
+    markPowerIntrosSeen: (state, action) => {
+      if (!Array.isArray(state.seenPowerIntros)) state.seenPowerIntros = [];
+      action.payload.forEach(id => {
+        if (!state.seenPowerIntros.includes(id)) state.seenPowerIntros.push(id);
+      });
+    },
     toggleMusicMute: (state) => { state.musicMuted = !state.musicMuted; },
     toggleSFXMute: (state) => { state.sfxMuted = !state.sfxMuted; },
     rekindleJourney: (state) => {
@@ -135,6 +142,7 @@ const shadowGardenSlice = createSlice({
       state.timeLeft = 300;
       state.scoreMultiplier = 1;
       state.scoreMultiplierExpiresAt = 0;
+      state.seenPowerIntros = [];
     },
     resetShadowGarden: () => initialState,
   },
@@ -155,6 +163,7 @@ export const {
   clearScoreMultiplier,
   setDomainExpansion,
   setTutorialCompleted,
+  markPowerIntrosSeen,
   toggleMusicMute,
   toggleSFXMute,
   rekindleJourney,

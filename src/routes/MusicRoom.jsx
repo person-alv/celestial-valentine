@@ -278,8 +278,7 @@ const MusicRoom = () => {
               <PhotoFrame
                 key={photo.id}
                 onClick={() => handlePhotoClick(photo.id)}
-                className="w-full bg-white p-2 shadow-2xl transform rotate-[-1deg] hover:rotate-0 transition-all cursor-pointer"
-                style={photo.colSpan === 2 ? { gridColumn: 'span 2' } : undefined}
+                className={`w-full bg-white p-2 shadow-2xl transform rotate-[-1deg] hover:rotate-0 transition-all cursor-pointer ${photo.colSpan === 2 ? 'md:col-span-2' : ''}`}
               >
                 <div
                   className="w-full bg-gray-200 overflow-hidden relative"

@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { useMatch3 } from '../hooks/useMatch3';
 import { useSound } from '../hooks/useSound';
 import { getLevelConfig } from '../data/shadow-garden/levels';
-import { getPowerById } from '../data/shadow-garden/powerups';
+import { powerups, getPowerById } from '../data/shadow-garden/powerups';
 
 // Game components
 import Board from '../components/shadow-garden/game/Board';
@@ -18,6 +18,7 @@ import ComboDisplay from '../components/shadow-garden/ui/ComboDisplay';
 import DomainExpansion from '../components/shadow-garden/effects/DomainExpansion';
 import PowerCinema from '../components/shadow-garden/effects/PowerCinema';
 import TutorialOverlay from '../components/shadow-garden/tutorial/TutorialOverlay';
+import PowerIntro from '../components/shadow-garden/tutorial/PowerIntro';
 import LoadingScreen from '../components/shared/LoadingScreen';
 
 // Level wrapper components (themed backgrounds)
@@ -33,6 +34,7 @@ import {
   setCurrentLevel,
   rekindleJourney,
   setDomainExpansion,
+  markPowerIntrosSeen,
 } from '../store/slices/shadowGardenSlice';
 
 const LEVEL_WRAPPERS = [Level1, Level2, Level3, Level4, Level5];
@@ -53,12 +55,14 @@ const ShadowGarden = () => {
     scoreMultiplier,
     scoreMultiplierExpiresAt,
     loveMeter,
+    seenPowerIntros,
   } = useSelector(s => s.shadowGarden);
 
   const { playBackground, playSFX, setBackgroundVolume } = useSound();
   const [isLoading,      setIsLoading]      = useState(true);
   const [showFailure,    setShowFailure]     = useState(false);
   const [activeCinemaId, setActiveCinemaId] = useState(null); // which power cinema is showing
+  const [introPowerIds, setIntroPowerIds] = useState([]);     // powers queued for the "New Power" intro
   const deTriggeredRef = useRef(false);
 
   const {
@@ -74,7 +78,7 @@ const ShadowGarden = () => {
     touchSwap,
     activatePower,
     clearTileType,
-  } = useMatch3();
+  } = useMatch3(introPowerIds.length > 0);
 
   const levelConfig = useMemo(() => getLevelConfig(currentLevel), [currentLevel]);
 
@@ -102,6 +106,17 @@ const ShadowGarden = () => {
     const healthValues = [5000, 8000, 12000, 20000, 50000];
     setTimeout(() => dispatch(setBossHealth(healthValues[currentLevel - 1] || 5000)), 50);
   }, [currentLevel, levelConfig, playBackground, dispatch, isLoading]);
+
+  // ── New-power intro: queue unseen powers unlocked at this level ──
+  useEffect(() => {
+    if (isLoading) return;
+    // On Level 1, wait for the first-time tutorial to finish before showing power cards.
+    if (currentLevel === 1 && !tutorialCompleted) return;
+    const unseen = powerups
+      .filter(p => p.unlockLevel === currentLevel && !seenPowerIntros.includes(p.id))
+      .map(p => p.id);
+    if (unseen.length > 0) setIntroPowerIds(unseen);
+  }, [isLoading, currentLevel, tutorialCompleted, seenPowerIntros]);
 
   // ── Level progression: boss defeated ──
   useEffect(() => {
@@ -195,7 +210,9 @@ const ShadowGarden = () => {
     : isSelectingType
     ? '— TAP A TILE TO DESTROY ALL OF ITS TYPE —'
     : isFreeSwapActive
-    ? '— RULER\'S AUTHORITY: SWAP ANY TWO TILES —'
+    ? (selectedTile
+        ? '— NOW TAP A SECOND TILE TO SWAP —'
+        : '— RULER\'S AUTHORITY: TAP ANY TWO TILES TO SWAP —')
     : null;
 
   if (isLoading) return <LoadingScreen message="ENTERING THE SHADOW GARDEN..." />;
@@ -264,6 +281,7 @@ const ShadowGarden = () => {
                 onTouchSwap={touchSwap}
                 isSelectingRow={isSelectingRow}
                 isSelectingType={isSelectingType}
+                isFreeSwapActive={isFreeSwapActive}
                 specialEffects={specialEffects}
               />
               {isFreeSwapActive && (
@@ -343,6 +361,17 @@ const ShadowGarden = () => {
 
         {/* Tutorial */}
         {!tutorialCompleted && <TutorialOverlay />}
+
+        {/* New-power intro cards (timer is frozen while these are open) */}
+        {introPowerIds.length > 0 && (
+          <PowerIntro
+            powerIds={introPowerIds}
+            onComplete={() => {
+              dispatch(markPowerIntrosSeen(introPowerIds));
+              setIntroPowerIds([]);
+            }}
+          />
+        )}
 
         {/* Failure screen */}
         {showFailure && (

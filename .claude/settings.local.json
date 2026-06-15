@@ -16,7 +16,10 @@
       "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\hooks\")",
       "PowerShell(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\public\" -Recurse | Select-Object FullName | Where-Object { $_.FullName -match \"README|dolls\" })",
       "Bash(dir /s /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\")",
-      "Bash(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine/\")"
+      "Bash(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine/\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\" -Recurse -File | Where-Object { $_.FullName -notmatch 'node_modules' } | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\\", \"\"\\) } | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\public\" -Recurse -File | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\\", \"\"\\) } | Sort-Object | Select-Object -First 200)",
+      "PowerShell(npm run *)"
     ],
     "deny": [],
     "ask": []

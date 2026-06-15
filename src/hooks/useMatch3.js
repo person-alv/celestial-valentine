@@ -11,7 +11,7 @@ import {
   setScoreMultiplier,
   tickTimer,
 } from '../store/slices/shadowGardenSlice';
-export const useMatch3 = () => {
+export const useMatch3 = (paused = false) => {
   const dispatch = useDispatch();
   const { powerUsages, currentLevel, timeLeft } = useSelector(s => s.shadowGarden);
 
@@ -45,12 +45,12 @@ export const useMatch3 = () => {
     setIsProcessing(false);
   }, [currentLevel]);
 
-  // Timer tick
+  // Timer tick — pauses while `paused` is true (e.g. a power-intro modal is open)
   useEffect(() => {
-    if (isProcessing) return;
+    if (isProcessing || paused) return;
     const interval = setInterval(() => dispatch(tickTimer()), 1000);
     return () => clearInterval(interval);
-  }, [dispatch, isProcessing]);
+  }, [dispatch, isProcessing, paused]);
 
   // Shuffle board if no moves remain
   useEffect(() => {
@@ -239,6 +239,11 @@ export const useMatch3 = () => {
     if (!selectedTile) {
       setSelectedTile({ row, col });
     } else {
+      // Re-tapping the already-selected tile just deselects it; keep any armed power (no self-swap).
+      if (selectedTile.row === row && selectedTile.col === col) {
+        setSelectedTile(null);
+        return;
+      }
       const isAdjacent = Math.abs(selectedTile.row - row) + Math.abs(selectedTile.col - col) === 1;
       if (isAdjacent || isFreeSwapActive) {
         swapTiles(selectedTile, { row, col }, isFreeSwapActive);

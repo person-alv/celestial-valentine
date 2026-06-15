@@ -14,9 +14,11 @@ const Board = ({
   onTouchSwap,
   isSelectingRow = false,
   isSelectingType = false,
+  isFreeSwapActive = false,
   specialEffects = [],
 }) => {
   const touchStart = useRef(null);
+  const lastTouchEndRef = useRef(0);
   const [hoveredRow, setHoveredRow]   = useState(null);
   // { row, col, dx, dy } while finger is dragging; null otherwise
   const [dragging, setDragging]       = useState(null);
@@ -44,6 +46,9 @@ const Board = ({
   };
 
   const handleTouchEnd = (e) => {
+    // Touch devices fire a synthesized "ghost" click after touchend; record the time so the
+    // guarded Tile onClick can swallow it (this tap is already handled below).
+    lastTouchEndRef.current = Date.now();
     const start = touchStart.current;
     touchStart.current = null;
     setDragging(null);
@@ -77,6 +82,14 @@ const Board = ({
     }
   };
 
+  // Desktop clicks pass straight through. On touch we swallow the synthesized ghost click
+  // that follows a tap (already handled in handleTouchEnd) so handleTileClick fires exactly
+  // once — a double fire silently self-swaps and cancels Ruler's Authority.
+  const handleTileClickGuarded = (row, col) => {
+    if (Date.now() - lastTouchEndRef.current < 700) return;
+    onTileClick(row, col);
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
@@ -102,7 +115,8 @@ const Board = ({
                 col={colIndex}
                 isSelected={selectedTile?.row === rowIndex && selectedTile?.col === colIndex}
                 isProcessing={isProcessing}
-                onClick={onTileClick}
+                onClick={handleTileClickGuarded}
+                isFreeSwapActive={isFreeSwapActive}
                 isRowHighlighted={isSelectingRow && hoveredRow === rowIndex}
                 isTypeTargeting={isSelectingType}
                 isDragging={isTileDragging}

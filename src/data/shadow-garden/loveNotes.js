@@ -9,21 +9,21 @@ export const loveNotes = [
   {
     id: 1,
     title: 'Message of Strength',
-    text: "Hey beautiful, ready to show this world what you're made of? I believe in you. You've got this! 💪✨",
+    text: "Hey beautiful, As much as I know I say this soooo often, you're the best thing to ever happen to me✨",
     occasion: 'Level Start',
     emotion: 'encouragement'
   },
   {
     id: 2,
     title: 'Keep Going',
-    text: "You're doing amazing! Every move you make reminds me why I fell for you. Keep going, my love! 💕",
+    text: "You're utter perfection in my life and having you by my side makes me happier than you can ever imagine, my love! 💕",
     occasion: 'Mid-Battle',
     emotion: 'admiration'
   },
   {
     id: 3,
     title: 'The Final Gate',
-    text: "This is it, my love. The final gate. Beyond this lies everything I want to show you, everything I want to say. Thank you for being mine. ❤️",
+    text: "This is it, a big letter to show how much you truly mean to me every single day, Beyond this lies everything I want to show you, everything I want to say. Thank you for being mine. ❤️",
     occasion: 'Level 5 Entry',
     emotion: 'devotion'
   }

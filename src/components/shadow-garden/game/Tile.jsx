@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import gsap from 'gsap';
 import { TILE_TYPES } from '../../../utils/match3/board';
 
-const Tile = ({ tile, row, col, isSelected, isProcessing, onClick, isRowHighlighted, isTypeTargeting, isDragging, dragOffset }) => {
+const Tile = ({ tile, row, col, isSelected, isProcessing, onClick, isRowHighlighted, isTypeTargeting, isDragging, dragOffset, isFreeSwapActive }) => {
   const animRef = useRef(null);
   const prevTileRef = useRef(tile);
   const isFirstMount = useRef(true);
@@ -153,9 +153,28 @@ const Tile = ({ tile, row, col, isSelected, isProcessing, onClick, isRowHighligh
           </TileInner>
         )}
       </AnimatedContent>
+
+      {/* Ruler's Authority: pulsing purple ring marks the first-picked tile, cueing the 2nd tap */}
+      {isSelected && isFreeSwapActive && <FreeSwapPulse />}
     </TileContainer>
   );
 };
+
+const freeSwapPulse = keyframes`
+  0%, 100% { transform: scale(1);    opacity: 0.55; }
+  50%      { transform: scale(1.08); opacity: 1; }
+`;
+
+const FreeSwapPulse = styled.div`
+  position: absolute;
+  inset: -2px;
+  border-radius: 12px;
+  border: 2px solid #9d4edd;
+  box-shadow: 0 0 12px rgba(157, 78, 221, 0.9), inset 0 0 8px rgba(157, 78, 221, 0.4);
+  pointer-events: none;
+  z-index: 3;
+  animation: ${freeSwapPulse} 0.9s ease-in-out infinite;
+`;
 
 const TileContainer = styled.div`
   aspect-ratio: 1;
