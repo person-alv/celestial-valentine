@@ -40,23 +40,23 @@ const MusicRoom = () => {
     setOpenPanels(prev => (prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]));
 
   const voiceNotes = [
-    { id: 1, title: "Our First Hello", date: "Feb 2024" },
+    { id: 1, title: "First Steps", date: "Feb 2024" },
     { id: 2, title: "Midnight Thoughts", date: "April 2024" },
-    { id: 3, title: "Summer Dreams", date: "July 2024" },
-    { id: 4, title: "Autumn Whispers", date: "Oct 2024" },
+    { id: 3, title: "Adventures Of Bliss", date: "July 2024" },
+    { id: 4, title: "Utter Perfection...", date: "Oct 2024" },
     { id: 5, title: "A Special Message", date: "Valentine 2026" }
   ];
 
   // aspectRatio derived from measured pixel dimensions of each file in public/images/photos/
   const photos = [
-    { id: 1, caption: "The day we met... ✨",            aspectRatio: "9/16" },  // 900×1600
-    { id: 9, caption: "Always by your side. 🌙",        aspectRatio: "9/16" },  // update ratio once file is measured
-    { id: 2, caption: "Coffee dates and rainy days. ☕", aspectRatio: "4/3",  colSpan: 2 },  // 1393×1080 landscape — own row
-    { id: 3, caption: "Under the summer sun. ☀️",        aspectRatio: "9/16" },  // 720×1280
-    { id: 4, caption: "Making magic together. 🪄",        aspectRatio: "9/16" },  // 720×1280
+    { id: 1, caption: "Always by my side ✨",            aspectRatio: "9/16" },  // 900×1600
+    { id: 9, caption: "No one else to think about 🤤",        aspectRatio: "9/16" },  // update ratio once file is measured
+    { id: 2, caption: "Authentic, Goofy Happiness 😝", aspectRatio: "4/3",  colSpan: 2 },  // 1393×1080 landscape — own row
+    { id: 3, caption: "😙😙😙",        aspectRatio: "9/16" },  // 720×1280
+    { id: 4, caption: "Randoms 🙃🙃",        aspectRatio: "9/16" },  // 720×1280
     { id: 5, caption: "Making magic together. 🪄",        aspectRatio: "4/7"  },  // 862×1509
-    { id: 6, caption: "Making magic together. 🪄",        aspectRatio: "3/4"  },  // 899×1190
-    { id: 7, caption: "Making magic together. 🪄",        aspectRatio: "8/9"  },  // 780×880
+    { id: 6, caption: "New Year's with my Princess ✨ ",        aspectRatio: "3/4"  },  // 899×1190
+    { id: 7, caption: "Smooth Though Playful 👀",        aspectRatio: "8/9"  },  // 780×880
     { id: 8, caption: "Forever and always. ❤️",          aspectRatio: "1/1"  },  // 899×907
   ];
 
@@ -108,16 +108,16 @@ const MusicRoom = () => {
     }
 
     if (activeVinyl === id) {
-      // Toggle off — restore ambient to full volume
+      // Toggle off — restore ambient to full volume (smooth fade)
       setActiveVinyl(null);
-      setBackgroundVolume(0.3);
+      setBackgroundVolume(0.3, 600);
       return;
     }
 
-    // New voice note — duck ambient, play note as a separate Howl
+    // New voice note — duck ambient (smooth fade) and play note as a separate Howl
     setActiveVinyl(id);
     playSFX('vinyl_scratch', '/sounds/shadow-garden/sfx/vinyl_scratch.mp3');
-    setBackgroundVolume(0.08);
+    setBackgroundVolume(0.018, 400);
 
     const noteHowl = new Howl({
       src: [`/sounds/voice_notes/note_${id}.mp3`],
@@ -125,7 +125,7 @@ const MusicRoom = () => {
       html5: true,
       onend: () => {
         setActiveVinyl(null);
-        setBackgroundVolume(0.3);
+        setBackgroundVolume(0.3, 600);
         voiceRef.current = null;
       },
     });
