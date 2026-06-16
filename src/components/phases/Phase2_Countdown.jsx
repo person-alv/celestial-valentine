@@ -301,7 +301,9 @@ const FloatingMessage = styled.div`
   pointer-events: none;
   animation: ${floatAway} 3s ease-out forwards;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-  white-space: nowrap;
+  white-space: normal;
+  max-width: 75vw;
+  text-align: center;
   z-index: 20;
 `;
 

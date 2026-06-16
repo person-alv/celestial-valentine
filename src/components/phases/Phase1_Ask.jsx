@@ -227,6 +227,11 @@ const NoButton = styled.button`
       transform: translate(-50%, -50%) scale(1.05);
     }
   }
+
+  @media (max-width: 768px) {
+    padding: 16px 44px;
+    font-size: 20px;
+  }
 `;
 
 const GhostButton = styled.div`
@@ -382,16 +387,18 @@ const Phase1_Ask = ({ onAccept }) => {
   ];
 
   // Helper to generate a safe position
+  // Range kept conservative so the button (with transform: translate(-50%,-50%)) stays on-screen
+  // even on small mobile viewports.
   const getSafePosition = () => {
     let newX, newY, distance;
     const centerX = 50;
     const centerY = 50;
-    const safeRadius = 25; 
+    const safeRadius = 25;
 
     let attempts = 0;
     do {
-      newX = Math.random() * 80 + 10;
-      newY = Math.random() * 80 + 10;
+      newX = Math.random() * 60 + 20; // 20%–80%
+      newY = Math.random() * 55 + 22; // 22%–77%
       distance = Math.sqrt(Math.pow(newX - centerX, 2) + Math.pow(newY - centerY, 2));
       attempts++;
     } while (distance < safeRadius && attempts < 50);
@@ -519,7 +526,7 @@ const Phase1_Ask = ({ onAccept }) => {
               $y={noPosition.y}
               onMouseEnter={handleNoHover}
               onClick={handleNoClick}
-              onTouchStart={handleNoClick}
+              onTouchStart={(e) => { e.preventDefault(); handleNoClick(e); }}
               $dissolving={noButtonDissolving}
             >
               NO

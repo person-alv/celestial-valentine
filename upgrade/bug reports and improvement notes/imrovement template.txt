@@ -1,0 +1,29 @@
+There are a number of game play changes and fixes I want us to change, but I want them changed systematically, always find the root cause, read the full game design ,come up with a plan on how to address the issue, confirm the plan will work given the codebase and only after finding out its viable do you write code
+
+1. when clicking the laptop, sometimes it opens the valentine's game, sometimes it opens shadow garden, sometimes it zooms but not to the laptop screen but some random centre area of the room instead of the system UI and this is the same area double clicking posters zooms to not the poster itself
+2. the heart domain lacks the playing again button
+3. The stars are perfect as they are, don't change anything there
+
+
+
+Now, find the root cause first, then ask me any follow up questions if you need to on the way forward on some things before even coding, and after I answer and approve is when you start
+
+
+
+
+
+Below are errors, discover the root cause, come up with a plan on fixing them, confirm the plan will work and only then do you start coding
+
+The errors:
+
+Failed to compile.
+
+Attempted import error: 'incrementCombo' is not exported from '../store/slices/shadowGardenSlice' (imported as 'incrementCombo').
+WARNING in [eslint]
+src\routes\Hub.jsx
+  Line 1:38:  'useMemo' is defined but never used  no-unused-vars
+
+ERROR in ./src/hooks/useMatch3.js 132:35-49
+export 'incrementCombo' (imported as 'incrementCombo') was not found in '../store/slices/shadowGardenSlice' (possible exports: addScore, completeLevel, consumePowerCharge, default, refillPower, rekindleJourney, resetShadowGarden, setBossHealth, setCurrentLevel, setDomainExpansion, setTutorialCompleted, tickTimer, toggleMusicMute, toggleSFXMute, unlockPower)
+
+webpack compiled with 1 error and 1 warning

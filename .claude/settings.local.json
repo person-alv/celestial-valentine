@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(dir /s /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\data\\\\shadow-garden\")",
+      "PowerShell(New-Item *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\public\\\\images\\\\bosses\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"done\")",
+      "Bash(dir /b /s \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\data\")",
+      "Bash(dir /b /s \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\utils\")",
+      "Bash(dir /b /s \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\components\\\\shadow-garden\")",
+      "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\data\\\\shadow-garden\")",
+      "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\utils\\\\match3\")",
+      "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\components\\\\shadow-garden\\\\tutorial\")",
+      "Bash(dir /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\\\\hooks\")",
+      "PowerShell(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\public\" -Recurse | Select-Object FullName | Where-Object { $_.FullName -match \"README|dolls\" })",
+      "Bash(dir /s /b \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\")",
+      "Bash(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine/\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\src\" -Recurse -File | Where-Object { $_.FullName -notmatch 'node_modules' } | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\\", \"\"\\) } | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\public\" -Recurse -File | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\USER\\\\Downloads\\\\celestial-valentine\\\\celestial-valentine\\\\\", \"\"\\) } | Sort-Object | Select-Object -First 200)",
+      "PowerShell(npm run *)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

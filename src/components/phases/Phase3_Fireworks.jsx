@@ -12,8 +12,13 @@ const Phase3_Fireworks = ({ onStart }) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
 
     // Show greeting after brief delay
     setTimeout(() => setShowGreeting(true), 500);
@@ -105,6 +110,7 @@ const Phase3_Fireworks = ({ onStart }) => {
     return () => {
       cancelAnimationFrame(animationRef.current);
       clearInterval(launchInterval);
+      window.removeEventListener('resize', handleResize);
     };
   }, [play]);
 

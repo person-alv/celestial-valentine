@@ -24,7 +24,7 @@ const GlobalStyles = createGlobalStyle`
   #root {
     width: 100vw;
     height: 100vh;
-    overflow: hidden;
+    overflow: clip; /* clip prevents root scroll while letting child scroll contexts work on iOS Safari */
     position: relative;
   }
 
@@ -104,9 +104,10 @@ const GlobalStyles = createGlobalStyle`
     }
   }
 
-  /* Prevent zoom on double-tap on iOS */
+  /* Prevent zoom on double-tap on iOS — scoped to interactive elements only so swipe
+     gestures on game containers are not consumed by the browser */
   @media (max-width: 768px) {
-    * {
+    button, a, label, [role="button"], input, select, textarea {
       touch-action: manipulation;
     }
   }

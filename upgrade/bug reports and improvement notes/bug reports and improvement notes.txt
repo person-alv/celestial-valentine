@@ -1,0 +1,12 @@
+1. Move tile bar to the middle
+2. Powerup animations- addressed
+3. Sounds even popups
+4. character and tile designs
+5.timing too short- addressed
+6. powerup leaving gaps-addressed
+7. Zooming in-addressed
+8. Skipping levels
+9. No unlock of powerups per level-addressed
+10. powerup activation by matching tiles isn't happening-addressed
+11. redesign of heart domain
+12. Interactive poster on the hub open space
